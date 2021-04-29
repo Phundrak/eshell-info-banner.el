@@ -24,8 +24,6 @@
 
 ;;; Commentary:
 
-;; FIXME: All members of paths are shortened even if unnecessary when
-;; displaying partitions.
 
 ;;; Code:
 
@@ -117,19 +115,20 @@ For public use, `PATH' should be a string representing a UNIX
 path.  For internal use, `PATH' cna also be a list. If `PATH' is
 neither of these, an error will be thrown by the function."
   (cond
-   ((stringp path) (f-short
+   ((stringp path) (abbreviate-file-name
                     (if abbr
                         (eshell-info-banner--abbr-path (f-split (eshell-info-banner--abbr-path path)))
                       path)))
    ((null path) "")
    ((listp path)
-    (f-join
-     (let* ((dir        (car path))
-            (first-char (substring dir 0 1)))
-       (if (equal "." first-char)
-           (substring dir 0 2)
-         first-char))
-     (eshell-info-banner--abbr-path (cdr path))))
+    (f-join (if (length= path 1)
+                (car path)
+              (let* ((dir        (car path))
+                     (first-char (substring dir 0 1)))
+                (if (string= "." first-char)
+                    (substring dir 0 2)
+                  first-char)))
+            (eshell-info-banner--abbr-path (cdr path))))
    (t (error "Invalid argument %s, neither stringp or listp" path))))
 
 (defun eshell-info-banner--get-mounted-partitions ()
