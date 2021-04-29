@@ -252,7 +252,7 @@ See also `eshell-info-banner--display-memory'."
                                                         :weight 'bold))
             ": "
             (eshell-info-banner--progress-bar bar-length percentage)
-            (format " %6s/%-5s (%s%%)\n"
+            (format " %6s / %-5s (%3s%%)"
                     (eshell-info-banner--mounted-partitions-used partition)
                     (eshell-info-banner--mounted-partitions-size partition)
                     (eshell-info-banner--with-face
@@ -292,11 +292,8 @@ See also `eshell-info-banner--display-memory'."
                                        (shell-command-to-string "free -b | tail -2")
                                        t)))
          (ram           (nth 0 memory))
-         (swap          (nth 1 memory)))
-    (message "%s" partitions)
-    (message "%s" memory)
-    (message "%s" ram)
-    (message "%s" swap)
+         (swap          (nth 1 memory))
+         (bar-length    (- tot-width left-padding 4 22)))
     (concat (format "%s\n" (s-repeat tot-width eshell-info-banner-progress-bar-char))
             (format "%s: %s Kernel.: %s\n"
                     (s-pad-right left-padding
@@ -309,7 +306,21 @@ See also `eshell-info-banner--display-memory'."
                     (s-pad-right middle-padding " " (eshell-info-banner--with-face hostname :weight 'bold))
                     uptime
                     )
-            )))
+            (eshell-info-banner--display-memory "Ram"
+                                                (string-to-number (nth 2 ram))
+                                                (string-to-number (nth 1 ram))
+                                                left-padding
+                                                bar-length)
+            (eshell-info-banner--display-memory "Swap"
+                                                (string-to-number (nth 2 swap))
+                                                (string-to-number (nth 1 swap))
+                                                left-padding
+                                                bar-length)
+            (mapconcat (lambda (partition)
+                         (eshell-info-banner--display-partition partition left-padding bar-length))
+                       partitions
+                       "\n")
+            (format "\n%s\n" (s-repeat tot-width eshell-info-banner-progress-bar-char)))))
 
 
 
