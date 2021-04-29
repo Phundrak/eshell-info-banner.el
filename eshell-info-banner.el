@@ -46,35 +46,30 @@
 
                                         ; Custom variables ;;;;;;;;;;;;;;;;;;;;
 
-(defcustom eshell-info-banner-max-length-partition 13
-  "Maximum length of a partition’s ruler."
+(defcustom eshell-info-banner-shorten-path-from 7
+  "From which length should a path be shortened?"
   :group 'eshell-info-banner
   :type 'integer)
-
-(defcustom eshell-info-banner-percentage-critical 120
-  "When a percentage becomes critical."
-  :group 'eshell-info-banner
-  :type 'float)
-
-(defcustom eshell-info-banner-percentage-warning 75
-  "When to warn about a percentage."
-  :group 'eshell-info-banner
-  :type 'float)
-
-(defcustom eshell-info-banner-progress-bar-char "="
-  "Character to fill the progress bars with."
-  :group 'eshell-info-banner
-  :type 'char)
 
 (defcustom eshell-info-banner-width 80
   "Width of the info banner to be shown in Eshell."
   :group 'eshell-info-banner
   :type 'integer)
 
-(defcustom eshell-info-banner-shorten-path-from 7
-  "From which length should a path be shortened?"
+(defcustom eshell-info-banner-progress-bar-char "="
+  "Character to fill the progress bars with."
   :group 'eshell-info-banner
-  :type 'integer)
+  :type 'char)
+
+(defcustom eshell-info-banner-warning-percentage 75
+  "When to warn about a percentage."
+  :group 'eshell-info-banner
+  :type 'float)
+
+(defcustom eshell-info-banner-critical-percentage 90
+  "When a percentage becomes critical."
+  :group 'eshell-info-banner
+  :type 'float)
 
                                         ; Faces ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -180,16 +175,15 @@ the left side of the banner."
              (len (max (length path) len)))
         (eshell-info-banner--get-longest-path (cdr partitions) len)))))
 
-;; FIXME: There’s apparently an issue here selecting faces
 (defun eshell-info-banner--get-color-percentage (percentage)
   "Display a `PERCENTAGE' with its according face."
   (let ((percentage (if (stringp percentage)
                         (string-to-number percentage)
                       percentage)))
     (cond
-     ((>= percentage eshell-info-banner-percentage-critical)
+     ((>= percentage eshell-info-banner-critical-percentage)
       'eshell-info-banner-critical-face)
-     ((>= percentage eshell-info-banner-percentage-warning)
+     ((>= percentage eshell-info-banner-warning-percentage)
       'eshell-info-banner-warning-face)
      (t 'eshell-info-banner-normal-face))))
 
@@ -261,6 +255,8 @@ See also `eshell-info-banner--display-memory'."
                      (number-to-string percentage)
                      :inherit (eshell-info-banner--get-color-percentage percentage))))))
 
+                                        ; Public functions ;;;;;;;;;;;;;;;;;;;;
+
 ;;;###autoload
 (defun eshell-info-banner ()
   "Banner for Eshell displaying system information."
@@ -325,10 +321,10 @@ See also `eshell-info-banner--display-memory'."
                        "\n")
             (format "\n%s\n" (s-repeat tot-width eshell-info-banner-progress-bar-char)))))
 
+;;;###autoload
 (defun eshell-info-banner-update-banner ()
   "Update the Eshell banner."
   (setq eshell-banner-message (eshell-info-banner)))
-
 
 (provide 'eshell-info-banner)
 
