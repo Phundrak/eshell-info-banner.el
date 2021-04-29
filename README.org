@@ -61,6 +61,17 @@ A couple of variables can be edited by the user in order to configure
 - ~eshell-info-banner-critical-percentage~ :: Percentage from which the
   level should be displayed as critical. Default value ~90~
 
+Don’t like the colors used by the package? They should follow by
+default your theme, but you can customize the following faces:
+- ~eshell-info-banner-background-face~ :: Used for filling the empty
+  part of progress bars
+- ~eshell-info-banner-normal-face~ :: Used for filling the progress bar
+  when on normal levels
+- ~eshell-info-banner-warning-face~ :: Used for filling the progress bar
+  when on warning levels
+- ~eshell-info-banner-critical-face~ :: Used for filling the progress
+  bar when on critical levels
+
 * License
 ~eshell-info-banner.el~ is available under the GNU GPL-3.0 license. You
 can find the full text in [[file:LICENSE.md][LICENSE.md]].
