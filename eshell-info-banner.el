@@ -24,7 +24,8 @@
 
 ;;; Commentary:
 
-;; commentary
+;; FIXME: All members of paths are shortened even if unnecessary when
+;; displaying partitions.
 
 ;;; Code:
 
