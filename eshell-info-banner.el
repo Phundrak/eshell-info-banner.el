@@ -216,12 +216,34 @@ displayed."
     (concat (s-pad-right text-padding "." type)
             ": "
             (eshell-info-banner--progress-bar bar-length percentage)
-            (format " %6s / %-5s ("
+            (format " %6s / %-5s (%s%%)\n"
                     (file-size-human-readable used)
-                    (file-size-human-readable total))
-            (eshell-info-banner--with-face (number-to-string percentage)
-                                           :inherit (eshell-info-banner--get-color-percentage percentage))
-            "%)\n")))
+                    (file-size-human-readable total)
+                    (eshell-info-banner--with-face (number-to-string percentage)
+                                                   :inherit (eshell-info-banner--get-color-percentage percentage))))))
+
+(defun eshell-info-banner--display-partition (partition text-padding bar-length)
+  "Display a progress bar showing how full a `PARTITION' is.
+
+`BAR-LENGTH' represents the total length of the progress bar,
+while `TEXT-PADDING' indicates how many dots are to be put
+between the partition’s name and the colon following it.
+
+See also `eshell-info-banner--display-memory'."
+  (let ((percentage (eshell-info-banner--mounted-partitions-percent partition)))
+    (concat (s-pad-right text-padding "."
+                         (eshell-info-banner--with-face (eshell-info-banner--mounted-partitions-path partition)
+                                                        :weight 'bold))
+            ": "
+            (eshell-info-banner--progress-bar bar-length percentage)
+            (format " %6s/%-5s (%s%%)\n"
+                    (eshell-info-banner--mounted-partitions-used partition)
+                    (eshell-info-banner--mounted-partitions-size partition)
+                    (eshell-info-banner--with-face
+                     (number-to-string percentage)
+                     :inherit (eshell-info-banner--get-color-percentage percentage))))))
+
+
 
 (provide 'eshell-info-banner)
 
