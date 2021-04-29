@@ -152,7 +152,7 @@ Return detected partitions as a list of structs."
                (when (string-prefix-p "/dev" filesystem t)
                  (make-eshell-info-banner--mounted-partitions
                   :path (if (length> mount eshell-info-banner-shorten-path-from)
-                            (eshell-info-banner--abbr-path mount)
+                            (eshell-info-banner--abbr-path mount t)
                           mount)
                   :size size
                   :used used
