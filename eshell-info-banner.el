@@ -3,7 +3,7 @@
 ;; Author: Lucien Cartier-Tilet <lucien@phundrak.com>
 ;; Maintainer: Lucien Cartier-Tilet
 ;; Version: 0.1.0
-;; Package-Requires: ((emacs "24") (dash "2") (f "0.20") (s "1))
+;; Package-Requires: ((emacs "24") (dash "2") (f "0.20") (s "1"))
 ;; Homepage: https://labs.phundrak.com/phundrak/eshell-info-banner.el
 
 ;; This file is not part of GNU Emacs
