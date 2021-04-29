@@ -182,9 +182,9 @@ shortened name of the partitions with a long name."
                         (string-to-number percentage)
                       percentage)))
     (cond
-     ((> percentage eshell-info-banner--percentage-critical)
+     ((>= percentage eshell-info-banner--percentage-critical)
       'eshell-info-banner-critical-face)
-     ((> percentage eshell-info-banner--percentage-warning)
+     ((>= percentage eshell-info-banner--percentage-warning)
       'eshell-info-banner-warning-face)
      (t 'eshell-info-banner-normal-face))))
 
