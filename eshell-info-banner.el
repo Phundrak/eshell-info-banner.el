@@ -136,7 +136,17 @@ neither of these, an error will be thrown by the function."
 
 Return detected partitions as a list of structs."
   (let ((partitions (split-string (shell-command-to-string "df -lH") (regexp-quote "\n") t)))
-    (-keep (lambda (partition)
+    (mapc (lambda (partition)
+            (let ((path (eshell-info-banner--mounted-partitions-path partition)))
+              (message "Length path: %s" (length path))
+              (message "Max length: %s" (max eshell-info-banner--min-length-left
+                                             eshell-info-banner--max-length-part))
+              (when (length> path
+                             (max eshell-info-banner--min-length-left
+                                  eshell-info-banner--max-length-part))
+                (setf (eshell-info-banner--mounted-partitions-path partition)
+                      (eshell-info-banner--abbr-path path t)))))
+          (-keep (lambda (partition)
              (let* ((partition  (split-string partition " " t))
                     (filesystem (nth 0 partition))
                     (size       (nth 1 partition))
@@ -145,14 +155,12 @@ Return detected partitions as a list of structs."
                     (mount      (nth 5 partition)))
                (when (string-prefix-p "/dev" filesystem t)
                  (make-eshell-info-banner--mounted-partitions
-                  :path (if (length> mount eshell-info-banner--max-length-part)
-                            mount
-                          (eshell-info-banner--abbr-path mount t))
+                  :path mount
                   :size size
                   :used used
                   :percent (string-to-number
                             (string-trim-left percent (regexp-quote "%")))))))
-           partitions)))
+           partitions))))
 
 (defun eshell-info-banner--get-left-pad (initial-pad partitions)
   "Get left padding for the various rulers.
