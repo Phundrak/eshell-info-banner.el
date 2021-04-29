@@ -30,6 +30,7 @@
 (require 'cl-lib)
 (require 'dash)
 (require 'f)
+(require 'em-banner)
 
                                         ; Groups ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -179,6 +180,7 @@ the left side of the banner."
              (len (max (length path) len)))
         (eshell-info-banner--get-longest-path (cdr partitions) len)))))
 
+;; FIXME: There’s apparently an issue here selecting faces
 (defun eshell-info-banner--get-color-percentage (percentage)
   "Display a `PERCENTAGE' with its according face."
   (let ((percentage (if (stringp percentage)
@@ -259,6 +261,7 @@ See also `eshell-info-banner--display-memory'."
                      (number-to-string percentage)
                      :inherit (eshell-info-banner--get-color-percentage percentage))))))
 
+;;;###autoload
 (defun eshell-info-banner ()
   "Banner for Eshell displaying system information."
   (let* ((partitions    (eshell-info-banner--get-mounted-partitions))
@@ -322,6 +325,9 @@ See also `eshell-info-banner--display-memory'."
                        "\n")
             (format "\n%s\n" (s-repeat tot-width eshell-info-banner-progress-bar-char)))))
 
+(defun eshell-info-banner-update-banner ()
+  "Update the Eshell banner."
+  (setq eshell-banner-message (eshell-info-banner)))
 
 
 (provide 'eshell-info-banner)
