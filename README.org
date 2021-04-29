@@ -9,6 +9,9 @@ words, let’s see how it looks like:
 #+caption: Screenshot of the default Eshell information banner
 [[file:img/screenshot.png]]
 
+This will be displayed every time you open a new Eshell instance, or
+if you invoke ~eshell-info-banner~ from it.
+
 This package is geared towards Linux in particular, I am pretty sure
 it will not work on Windows, and there will probably be bugs on
 macOS. PR are welcome if you want to fix that!
@@ -71,6 +74,18 @@ default your theme, but you can customize the following faces:
   when on warning levels
 - ~eshell-info-banner-critical-face~ :: Used for filling the progress
   bar when on critical levels
+
+* My computer doesn’t have a battery, will this still work?
+As you can see, one line shows you your battery level. Il will start
+to warn you in a reverse way compared to the other progress bars, as
+it should for battery levels –a fully charged battery at 100% is not
+at a critical level, but at 0% it would be.
+
+However, you might be on a desktop or any kind of computer that does
+not have a battery, so… what do? Don’t worry, /Emacs will automatically
+detect whether you have a battery or not/ and will only display this
+line if you have one. If you don’t have a battery, the only difference
+is you will have one less line than laptop users.
 
 * License
 ~eshell-info-banner.el~ is available under the GNU GPL-3.0 license. You

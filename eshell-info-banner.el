@@ -187,22 +187,30 @@ the left side of the banner."
       'eshell-info-banner-warning-face)
      (t 'eshell-info-banner-normal-face))))
 
-(defun eshell-info-banner--progress-bar (length percentage)
+(defun eshell-info-banner--progress-bar (length percentage &optional invert)
   "Display a progress bar `LENGTH' long and `PERCENTAGE' full.
 The full path will be displayed filled with the character
 specified by `eshell-info-banner-progress-bar-char' up to
-`PERCENTAGE' percents.  The rest will be empty."
-  (let* ((length-filled (if (= 0 percentage)
-                            0
-                          (/ (* length percentage) 100)))
-         (length-empty  (- length length-filled)))
+`PERCENTAGE' percents.  The rest will be empty.
+
+If `INVERT' is t, then consider the percentage to approach
+critical levels close to 0 rather than 100."
+  (message "Length: %s" length)
+  (let* ((length-filled     (if (= 0 percentage)
+                                0
+                              (/ (* length percentage) 100)))
+         (length-empty      (- length length-filled))
+         (percentage-level (if invert
+                               (- 100 percentage)
+                             percentage)))
     (concat
      (eshell-info-banner--with-face "[" :weight 'bold)
      (eshell-info-banner--with-face (s-repeat length-filled eshell-info-banner-progress-bar-char)
                                     :weight 'bold
-                                    :inherit (eshell-info-banner--get-color-percentage percentage))
+                                    :inherit (eshell-info-banner--get-color-percentage percentage-level))
      (eshell-info-banner--with-face (s-repeat length-empty eshell-info-banner-progress-bar-char)
-                                    :weight 'bold :inherit 'eshell-info-banner-background-face)
+                                    :weight 'bold
+                                    :inherit 'eshell-info-banner-background-face)
      (eshell-info-banner--with-face "]" :weight 'bold))))
 
 (defun eshell-info-banner--display-memory (type used total text-padding bar-length)
@@ -255,6 +263,35 @@ See also `eshell-info-banner--display-memory'."
                      (number-to-string percentage)
                      :inherit (eshell-info-banner--get-color-percentage percentage))))))
 
+(defun eshell-info-banner--display-battery (text-padding bar-length)
+  "If the computer has a battery, display its level.
+
+Pad the left text with dots by `TEXT-PADDING' characters.
+
+`BAR-LENGTH' indicates the length in characters of the progress
+bar.
+
+The usage of `eshell-info-banner-warning-percentage' and
+`eshell-info-banner-critical-percentage' is reversed, and can be
+thought of as the “percentage of discharge” of the computer.
+Thus, setting the warning at 75% will be translated as showing
+the warning face with a battery level of 25% or less."
+  (let ((battery-level (battery)))
+    (if (string= battery-level "Battery status not available")
+        ""
+      (let ((percentage (save-match-data
+                          (string-match "\\([0-9]+\\)\\.[0-9]+%" battery-level)
+                          (string-to-number (substring battery-level (match-beginning 1) (match-end 1))))))
+        (concat (s-pad-right text-padding "." "Battery")
+                ": "
+                (eshell-info-banner--progress-bar bar-length
+                                                  percentage
+                                                  t)
+                (s-repeat 16 " ")
+                (format "(%3s%%)\n" (eshell-info-banner--with-face
+                                     (number-to-string percentage)
+                                     :inherit (eshell-info-banner--get-color-percentage (- 100.0 percentage)))))))))
+
                                         ; Public functions ;;;;;;;;;;;;;;;;;;;;
 
 ;;;###autoload
@@ -303,8 +340,8 @@ See also `eshell-info-banner--display-memory'."
             (format "%s: %s Uptime.: %s\n"
                     (s-pad-right left-padding "." "Hostname")
                     (s-pad-right middle-padding " " (eshell-info-banner--with-face hostname :weight 'bold))
-                    uptime
-                    )
+                    uptime)
+            (eshell-info-banner--display-battery left-padding bar-length)
             (eshell-info-banner--display-memory "Ram"
                                                 (string-to-number (nth 2 ram))
                                                 (string-to-number (nth 1 ram))
