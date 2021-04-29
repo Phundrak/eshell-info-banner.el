@@ -40,11 +40,10 @@
   :prefix "eshell-info-banner-"
   :link '(url-link :tag "Gitea" "https://labs.phundrak.com/phundrak/eshell-info-banner.el"))
 
-                                        ; Structs ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                                        ; Constants ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(cl-defstruct eshell-info-banner--mounted-partitions
-  "Object representing a mounted partition found in the system."
-  path size used percent)
+(defconst eshell-info-banner--min-length-left 8
+  "Minimum length of text on the left hand side of the banner.")
 
                                         ; Custom variables ;;;;;;;;;;;;;;;;;;;;
 
@@ -89,6 +88,12 @@
   '((t :inherit error))
   "Face for eshell-info-banner progress bars displaying critical levels."
   :group 'eshell-info-banner)
+
+                                        ; Structs ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(cl-defstruct eshell-info-banner--mounted-partitions
+  "Object representing a mounted partition found in the system."
+  path size used percent)
 
                                         ; Macros ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
