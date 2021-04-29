@@ -1,8 +1,7 @@
 #+title: eshell-info-banner.el
 #+author: Lucien Cartier-Tilet
 #+email: lucien@phundrak.com
-* eshell-info-banner.el
-** Introduction
+* Introduction
 ~eshell-info-banner.el~ is a utility for creating an informative banner,
 akin to ~fish_greeting~ but for Eshell. But an image is worth a thousand
 words, let’s see how it looks like:
@@ -14,7 +13,7 @@ This package is geared towards Linux in particular, I am pretty sure
 it will not work on Windows, and there will probably be bugs on
 macOS. PR are welcome if you want to fix that!
 
-** Installation 
+* Installation 
 A couple of options are available for installing
 ~eshell-info-banner.el~. The first one is to clone the repository in
 your ~load-path~ and add the following to your ~.emacs~ or your ~init.el~:
@@ -44,7 +43,7 @@ a PR to add some more installation instructions!
 There is currently no plans of making this package available on MELPA
 or non-gnu elpa.
 
-** Customizing
+* Customizing
 A couple of variables can be edited by the user in order to configure
 ~eshell-info-banner.el~:
 - ~eshell-info-banner-shorten-path-from~ :: Maximum length of the mount
@@ -62,6 +61,6 @@ A couple of variables can be edited by the user in order to configure
 - ~eshell-info-banner-critical-percentage~ :: Percentage from which the
   level should be displayed as critical. Default value ~90~
 
-** License
+* License
 ~eshell-info-banner.el~ is available under the GNU GPL-3.0 license. You
 can find the full text in [[file:LICENSE.md][LICENSE.md]].
