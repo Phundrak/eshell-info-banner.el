@@ -45,25 +45,35 @@
 
                                         ; Custom variables ;;;;;;;;;;;;;;;;;;;;
 
-(defcustom eshell-info-banner--max-length-part 13
+(defcustom eshell-info-banner-max-length-partition 13
   "Maximum length of a partition’s ruler."
   :group 'eshell-info-banner
   :type 'integer)
 
-(defcustom eshell-info-banner--percentage-critical 90
+(defcustom eshell-info-banner-percentage-critical 120
   "When a percentage becomes critical."
   :group 'eshell-info-banner
   :type 'float)
 
-(defcustom eshell-info-banner--percentage-warning 75
+(defcustom eshell-info-banner-percentage-warning 75
   "When to warn about a percentage."
   :group 'eshell-info-banner
   :type 'float)
 
-(defcustom eshell-info-banner--progress-bar-char "="
+(defcustom eshell-info-banner-progress-bar-char "="
   "Character to fill the progress bars with."
   :group 'eshell-info-banner
   :type 'char)
+
+(defcustom eshell-info-banner-width 80
+  "Width of the info banner to be shown in Eshell."
+  :group 'eshell-info-banner
+  :type 'integer)
+
+(defcustom eshell-info-banner-shorten-path-from 7
+  "From which length should a path be shortened?"
+  :group 'eshell-info-banner
+  :type 'integer)
 
                                         ; Faces ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -136,17 +146,7 @@ neither of these, an error will be thrown by the function."
 
 Return detected partitions as a list of structs."
   (let ((partitions (split-string (shell-command-to-string "df -lH") (regexp-quote "\n") t)))
-    (mapc (lambda (partition)
-            (let ((path (eshell-info-banner--mounted-partitions-path partition)))
-              (message "Length path: %s" (length path))
-              (message "Max length: %s" (max eshell-info-banner--min-length-left
-                                             eshell-info-banner--max-length-part))
-              (when (length> path
-                             (max eshell-info-banner--min-length-left
-                                  eshell-info-banner--max-length-part))
-                (setf (eshell-info-banner--mounted-partitions-path partition)
-                      (eshell-info-banner--abbr-path path t)))))
-          (-keep (lambda (partition)
+    (-keep (lambda (partition)
              (let* ((partition  (split-string partition " " t))
                     (filesystem (nth 0 partition))
                     (size       (nth 1 partition))
@@ -155,26 +155,29 @@ Return detected partitions as a list of structs."
                     (mount      (nth 5 partition)))
                (when (string-prefix-p "/dev" filesystem t)
                  (make-eshell-info-banner--mounted-partitions
-                  :path mount
+                  :path (if (length> mount eshell-info-banner-shorten-path-from)
+                            (eshell-info-banner--abbr-path mount)
+                          mount)
                   :size size
                   :used used
                   :percent (string-to-number
                             (string-trim-left percent (regexp-quote "%")))))))
-           partitions))))
+           partitions)))
 
-(defun eshell-info-banner--get-left-pad (initial-pad partitions)
-  "Get left padding for the various rulers.
+(defun eshell-info-banner--get-longest-path (partitions &optional len)
+  "Find the length of the longest partition path in `PARTITIONS'.
 
-If `PARTITIONS' have a name short enough, then return
-`INITIAL-PAD', otherwise return enough length to display the
-shortened name of the partitions with a long name."
-  (if partitions
-      (let ((part-length (length (eshell-info-banner--mounted-partitions-path (car partitions)))))
-        (eshell-info-banner--get-left-pad (if (> part-length initial-pad)
-                                              part-length
-                                            initial-pad)
-                                          (cdr partitions)))
-    initial-pad))
+The variable `LEN' should only be used internally and represents
+the longest path so far, or the minimum length of text present on
+the left side of the banner."
+  (let ((len (if (null len)
+                 eshell-info-banner--min-length-left
+               len)))
+    (if (null partitions)
+        len
+      (let* ((path (eshell-info-banner--mounted-partitions-path (car partitions)))
+             (len (max (length path) len)))
+        (eshell-info-banner--get-longest-path (cdr partitions) len)))))
 
 (defun eshell-info-banner--get-color-percentage (percentage)
   "Display a `PERCENTAGE' with its according face."
@@ -182,16 +185,16 @@ shortened name of the partitions with a long name."
                         (string-to-number percentage)
                       percentage)))
     (cond
-     ((>= percentage eshell-info-banner--percentage-critical)
+     ((>= percentage eshell-info-banner-percentage-critical)
       'eshell-info-banner-critical-face)
-     ((>= percentage eshell-info-banner--percentage-warning)
+     ((>= percentage eshell-info-banner-percentage-warning)
       'eshell-info-banner-warning-face)
      (t 'eshell-info-banner-normal-face))))
 
 (defun eshell-info-banner--progress-bar (length percentage)
   "Display a progress bar `LENGTH' long and `PERCENTAGE' full.
 The full path will be displayed filled with the character
-specified by `eshell-info-banner--progress-bar-char' up to
+specified by `eshell-info-banner-progress-bar-char' up to
 `PERCENTAGE' percents.  The rest will be empty."
   (let* ((length-filled (if (= 0 percentage)
                             0
@@ -199,10 +202,10 @@ specified by `eshell-info-banner--progress-bar-char' up to
          (length-empty  (- length length-filled)))
     (concat
      (eshell-info-banner--with-face "[" :weight 'bold)
-     (eshell-info-banner--with-face (s-repeat length-filled eshell-info-banner--progress-bar-char)
+     (eshell-info-banner--with-face (s-repeat length-filled eshell-info-banner-progress-bar-char)
                                     :weight 'bold
                                     :inherit (eshell-info-banner--get-color-percentage percentage))
-     (eshell-info-banner--with-face (s-repeat length-empty eshell-info-banner--progress-bar-char)
+     (eshell-info-banner--with-face (s-repeat length-empty eshell-info-banner-progress-bar-char)
                                     :weight 'bold :inherit 'eshell-info-banner-background-face)
      (eshell-info-banner--with-face "]" :weight 'bold))))
 
@@ -229,7 +232,7 @@ displayed."
     (concat (s-pad-right text-padding "." type)
             ": "
             (eshell-info-banner--progress-bar bar-length percentage)
-            (format " %6s / %-5s (%s%%)\n"
+            (format " %6s / %-5s (%3s%%)\n"
                     (file-size-human-readable used)
                     (file-size-human-readable total)
                     (eshell-info-banner--with-face (number-to-string percentage)
@@ -255,6 +258,58 @@ See also `eshell-info-banner--display-memory'."
                     (eshell-info-banner--with-face
                      (number-to-string percentage)
                      :inherit (eshell-info-banner--get-color-percentage percentage))))))
+
+(defun eshell-info-banner ()
+  "Banner for Eshell displaying system information."
+  (let* ((partitions    (eshell-info-banner--get-mounted-partitions))
+         (os            (replace-regexp-in-string
+                         ".*\"\\(.+\\)\""
+                         "\\1"
+                         (car (-filter (lambda (line)
+                                         (s-contains? "PRETTY_NAME" line))
+                                       (s-lines (with-temp-buffer
+                                                  (insert-file-contents "/etc/os-release")
+                                                  (buffer-string)))))))
+         (hostname      (system-name))
+         (uptime        (s-chop-prefix "up "
+                                       (s-trim (shell-command-to-string "uptime -p"))))
+         (kernel        (concat (s-trim (shell-command-to-string "uname -s"))
+                                " "
+                                (s-trim (shell-command-to-string "uname -r"))))
+         (left-padding  (eshell-info-banner--get-longest-path partitions))
+         (left-text     (max (length os)
+                             (length hostname)))
+         (left-length   (+ left-padding 2 left-text)) ; + ": "
+         (right-text    (+ (length "Kernel: ")
+                           (max (length uptime)
+                                (length kernel))))
+         (tot-width     (max (+ left-length right-text 3)
+                             eshell-info-banner-width))
+         (middle-padding (- tot-width right-text left-padding 4))
+         (memory        (-map (lambda (line)
+                                (s-split " " line t))
+                              (s-split "\n"
+                                       (shell-command-to-string "free -b | tail -2")
+                                       t)))
+         (ram           (nth 0 memory))
+         (swap          (nth 1 memory)))
+    (message "%s" partitions)
+    (message "%s" memory)
+    (message "%s" ram)
+    (message "%s" swap)
+    (concat (format "%s\n" (s-repeat tot-width eshell-info-banner-progress-bar-char))
+            (format "%s: %s Kernel.: %s\n"
+                    (s-pad-right left-padding
+                                 "."
+                                 "OS")
+                    (s-pad-right middle-padding " " (eshell-info-banner--with-face os :weight 'bold))
+                    kernel)
+            (format "%s: %s Uptime.: %s\n"
+                    (s-pad-right left-padding "." "Hostname")
+                    (s-pad-right middle-padding " " (eshell-info-banner--with-face hostname :weight 'bold))
+                    uptime
+                    )
+            )))
 
 
 
