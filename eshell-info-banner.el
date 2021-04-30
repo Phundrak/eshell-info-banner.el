@@ -2,7 +2,7 @@
 
 ;; Author: Lucien Cartier-Tilet <lucien@phundrak.com>
 ;; Maintainer: Lucien Cartier-Tilet
-;; Version: 0.1.0
+;; Version: 0.2.0
 ;; Package-Requires: ((emacs "24") (dash "2") (f "0.20") (s "1"))
 ;; Homepage: https://labs.phundrak.com/phundrak/eshell-info-banner.el
 
@@ -34,7 +34,7 @@
 
                                         ; Groups ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defgroup eshell-info-banner nil
+(defgroup eshell-info-banner ()
   "System information as your Eshell banner."
   :prefix "eshell-info-banner-"
   :link '(url-link :tag "Gitea" "https://labs.phundrak.com/phundrak/eshell-info-banner.el"))

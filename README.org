@@ -87,6 +87,24 @@ detect whether you have a battery or not/ and will only display this
 line if you have one. If you don’t have a battery, the only difference
 is you will have one less line than laptop users.
 
+* Upcoming changes
+Here are some upcoming changes I hope I’ll make in the future. If you
+see a feature still hasn’t been implemented and you wish to implement
+it, don’t hesitate to contribute and submit a PR!
+
+** Better partitions detection
+I wish to make the partitions detection a bit more configurable,
+only partitions which filesystem is located in ~/dev~ are detected and
+shown, I would like to allow people to make them discoverable
+through their mountpoint instead through a configurable
+alist. Change to come in future versions!
+
+** Better support for other OSes
+Displaying the OS name only works on systems that have an
+~/etc/os-release~ file and ~df~ available in Eshell’s path —i.e. it will
+not work on Windows, and probably not on macOS. This should be fixed
+someday. (And *BSD maybe?)
+
 * License
 ~eshell-info-banner.el~ is available under the GNU GPL-3.0 license. You
 can find the full text in [[file:LICENSE.md][LICENSE.md]].
