@@ -292,20 +292,46 @@ the warning face with a battery level of 25% or less."
                                      (number-to-string percentage)
                                      :inherit (eshell-info-banner--get-color-percentage (- 100.0 percentage)))))))))
 
+                                        ; Operating system identification ;;;;;;;;;;;;;;;;;;
+(defun eshell-info-banner--get-os-information-from-release-file (&optional release-file)
+  "Read the operating system from the given RELEASE-FILE.
+
+If RELEASE-FILE is nil, use '/etc/os-release'."
+  (setq release-file (or release-file "/etc/os-release"))
+  (replace-regexp-in-string
+   ".*\"\\(.+\\)\""
+   "\\1"
+   (car (-filter (lambda (line)
+                   (s-contains? "PRETTY_NAME" line))
+                 (s-lines (with-temp-buffer
+                            (insert-file-contents release-file)
+                            (buffer-string)))))))
+
+(defun eshell-info-banner--get-os-information-from-hostnamectl ()
+  "Read the operating system via hostnamectl."
+  (with-temp-buffer
+    (call-process "hostnamectl" nil t nil)
+    (re-search-backward "Operating System: \\(.*\\)")
+    (match-string 1)))
+
+(defun eshell-info-banner--get-os-information-from-lsb-release ()
+  "Read the operating system information from lsb_release"
+  (shell-command-to-string "lsb_release -d -s"))
+
+(defun eshell-info-banner--get-os-information ()
+  "Get operating system identifying information."
+  (or (ignore-errors (eshell-info-banner--get-os-information-from-hostnamectl))
+      (ignore-errors (eshell-info-banner--get-os-information-from-lsb-release))
+      (ignore-errors (eshell-info-banner--get-os-information-from-release))
+      "Unkown"))
+
                                         ; Public functions ;;;;;;;;;;;;;;;;;;;;
 
 ;;;###autoload
 (defun eshell-info-banner ()
   "Banner for Eshell displaying system information."
   (let* ((partitions    (eshell-info-banner--get-mounted-partitions))
-         (os            (replace-regexp-in-string
-                         ".*\"\\(.+\\)\""
-                         "\\1"
-                         (car (-filter (lambda (line)
-                                         (s-contains? "PRETTY_NAME" line))
-                                       (s-lines (with-temp-buffer
-                                                  (insert-file-contents "/etc/os-release")
-                                                  (buffer-string)))))))
+         (os            (eshell-info-banner--get-os-information))
          (hostname      (system-name))
          (uptime        (s-chop-prefix "up "
                                        (s-trim (shell-command-to-string "uptime -p"))))
