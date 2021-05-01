@@ -298,14 +298,11 @@ the warning face with a battery level of 25% or less."
 
 If RELEASE-FILE is nil, use '/etc/os-release'."
   (setq release-file (or release-file "/etc/os-release"))
-  (replace-regexp-in-string
-   ".*\"\\(.+\\)\""
-   "\\1"
-   (car (-filter (lambda (line)
-                   (s-contains? "PRETTY_NAME" line))
-                 (s-lines (with-temp-buffer
-                            (insert-file-contents release-file)
-                            (buffer-string)))))))
+  (with-temp-buffer
+    (insert-file-contents release-file)
+    (goto-char (point-min))
+    (re-search-forward "PRETTY_NAME=\"\\(.*\\)\"")
+    (match-string 1)))
 
 (defun eshell-info-banner--get-os-information-from-hostnamectl ()
   "Read the operating system via hostnamectl."
