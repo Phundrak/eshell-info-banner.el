@@ -317,10 +317,11 @@ If RELEASE-FILE is nil, use '/etc/os-release'."
 
 (defun eshell-info-banner--get-os-information ()
   "Get operating system identifying information."
-  (or (ignore-errors (eshell-info-banner--get-os-information-from-hostnamectl))
-      (ignore-errors (eshell-info-banner--get-os-information-from-lsb-release))
-      (ignore-errors (eshell-info-banner--get-os-information-from-release))
-      "Unkown"))
+  (cond
+   ((executable-find "hostnamectl") (eshell-info-banner--get-os-information-from-hostnamectl))
+   ((executable-find "lsb_release") (eshell-info-banner--get-os-information-from-lsb-release))
+   ((file-exists-p "/etc/os-release") (eshell-info-banner--get-os-information-from-release-file))
+   (t "Unknown")))
 
                                         ; Public functions ;;;;;;;;;;;;;;;;;;;;
 
