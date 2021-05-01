@@ -127,7 +127,7 @@ neither of these, an error will be thrown by the function."
                       path)))
    ((null path) "")
    ((listp path)
-    (f-join (if (length= path 1)
+    (f-join (if (= (length path) 1)
                 (car path)
               (let* ((dir        (car path))
                      (first-char (substring dir 0 1)))
@@ -151,7 +151,7 @@ Return detected partitions as a list of structs."
                     (mount      (nth 5 partition)))
                (when (string-prefix-p "/dev" filesystem t)
                  (make-eshell-info-banner--mounted-partitions
-                  :path (if (length> mount eshell-info-banner-shorten-path-from)
+                  :path (if (> (length mount) eshell-info-banner-shorten-path-from)
                             (eshell-info-banner--abbr-path mount t)
                           mount)
                   :size size
