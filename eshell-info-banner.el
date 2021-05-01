@@ -297,9 +297,8 @@ the warning face with a battery level of 25% or less."
   "Read the operating system from the given RELEASE-FILE.
 
 If RELEASE-FILE is nil, use '/etc/os-release'."
-  (setq release-file (or release-file "/etc/os-release"))
   (with-temp-buffer
-    (insert-file-contents release-file)
+    (insert-file-contents (or release-file "/etc/os-release"))
     (goto-char (point-min))
     (re-search-forward "PRETTY_NAME=\"\\(.*\\)\"")
     (match-string 1)))
