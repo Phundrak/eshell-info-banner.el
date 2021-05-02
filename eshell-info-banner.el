@@ -141,7 +141,7 @@ neither of these, an error will be thrown by the function."
   "Detect mounted partitions on the system.
 
 Return detected partitions as a list of structs."
-  (let ((partitions (split-string (shell-command-to-string "df -lH") (regexp-quote "\n") t)))
+  (let ((partitions (split-string (shell-command-to-string "LANG=C df -lH") (regexp-quote "\n") t)))
     (-keep (lambda (partition)
              (let* ((partition  (split-string partition " " t))
                     (filesystem (nth 0 partition))
@@ -348,7 +348,7 @@ If RELEASE-FILE is nil, use '/etc/os-release'."
          (memory        (-map (lambda (line)
                                 (s-split " " line t))
                               (s-split "\n"
-                                       (shell-command-to-string "free -b | tail -2")
+                                       (shell-command-to-string "LANG=C free -b | tail -2")
                                        t)))
          (ram           (nth 0 memory))
          (swap          (nth 1 memory))
