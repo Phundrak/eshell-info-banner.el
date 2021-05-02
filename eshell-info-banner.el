@@ -196,7 +196,6 @@ specified by `eshell-info-banner-progress-bar-char' up to
 
 If `INVERT' is t, then consider the percentage to approach
 critical levels close to 0 rather than 100."
-  (message "Length: %s" length)
   (let* ((length-filled     (if (= 0 percentage)
                                 0
                               (/ (* length percentage) 100)))
