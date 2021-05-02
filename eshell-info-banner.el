@@ -1,8 +1,8 @@
 ;;; eshell-info-banner.el --- System information as your Eshell banner -*- lexical-binding: t -*-
 
 ;; Author: Lucien Cartier-Tilet <lucien@phundrak.com>
-;; Maintainer: Lucien Cartier-Tilet
-;; Version: 0.2.0
+;; Maintainer: Lucien Cartier-Tilet <lucien@phundrak.com>
+;; Version: 0.2.1
 ;; Package-Requires: ((emacs "24") (dash "2") (f "0.20") (s "1"))
 ;; Homepage: https://labs.phundrak.com/phundrak/eshell-info-banner.el
 
@@ -37,7 +37,8 @@
 (defgroup eshell-info-banner ()
   "System information as your Eshell banner."
   :prefix "eshell-info-banner-"
-  :link '(url-link :tag "Gitea" "https://labs.phundrak.com/phundrak/eshell-info-banner.el"))
+  :link '(url-link :tag "Gitea" "https://labs.phundrak.com/phundrak/eshell-info-banner.el")
+  :link '(url-link :tag "Github" "https://github.com/Phundrak/eshell-info-banner.el"))
 
                                         ; Constants ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
