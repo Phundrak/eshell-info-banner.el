@@ -314,12 +314,26 @@ If RELEASE-FILE is nil, use '/etc/os-release'."
   "Read the operating system information from lsb_release"
   (shell-command-to-string "lsb_release -d -s"))
 
+(defun eshell-info-banner--get-os-information-from-registry ()
+  "Read the operating system information from the Windows registry."
+  (let ((win32-name "Windows")
+        (win32-build "Unknown"))
+    (with-temp-buffer
+      (call-process "reg" nil t nil "query" "HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion")
+      (goto-char (point-min))
+      (while (re-search-forward "\\([^[:blank:]]+\\) *\\(REG_[^[:blank:]]+\\) *\\(.+\\)" nil t)
+        (cond
+         ((string= "ProductName" (match-string 1)) (setq win32-name (match-string 3)))
+         ((string= "BuildLab" (match-string 1)) (setq win32-build (match-string 3)))))
+      (format "%s (%s)" win32-name win32-build))))
+
 (defun eshell-info-banner--get-os-information ()
   "Get operating system identifying information."
   (cond
    ((executable-find "hostnamectl") (eshell-info-banner--get-os-information-from-hostnamectl))
    ((executable-find "lsb_release") (eshell-info-banner--get-os-information-from-lsb-release))
    ((file-exists-p "/etc/os-release") (eshell-info-banner--get-os-information-from-release-file))
+   ((executable-find "reg") (eshell-info-banner--get-os-information-from-registry))
    (t "Unknown")))
 
                                         ; Public functions ;;;;;;;;;;;;;;;;;;;;
