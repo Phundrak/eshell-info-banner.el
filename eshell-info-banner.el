@@ -47,6 +47,11 @@
 
                                         ; Custom variables ;;;;;;;;;;;;;;;;;;;;
 
+(defcustom eshell-info-banner-tramp-aware t
+  "Make `eshell-info-banner' TRAMP aware."
+  :group 'eshell-info-banner
+  :type 'boolean)
+
 (defcustom eshell-info-banner-shorten-path-from 7
   "From which length should a path be shortened?"
   :group 'eshell-info-banner
@@ -297,18 +302,20 @@ the warning face with a battery level of 25% or less."
   "Read the operating system from the given RELEASE-FILE.
 
 If RELEASE-FILE is nil, use '/etc/os-release'."
-  (with-temp-buffer
-    (insert-file-contents (or release-file "/etc/os-release"))
-    (goto-char (point-min))
-    (re-search-forward "PRETTY_NAME=\"\\(.*\\)\"")
-    (match-string 1)))
+  (let ((prefix (if eshell-info-banner-tramp-aware (file-remote-p default-directory) "")))
+    (with-temp-buffer
+      (insert-file-contents (concat prefix (or release-file "/etc/os-release")))
+      (goto-char (point-min))
+      (re-search-forward "PRETTY_NAME=\"\\(.*\\)\"")
+      (match-string 1))))
 
 (defun eshell-info-banner--get-os-information-from-hostnamectl ()
   "Read the operating system via hostnamectl."
-  (with-temp-buffer
-    (call-process "hostnamectl" nil t nil)
-    (re-search-backward "Operating System: \\(.*\\)")
-    (match-string 1)))
+  (let ((default-directory (if eshell-info-banner-tramp-aware default-directory "~")))
+    (with-temp-buffer
+      (process-file "hostnamectl" nil t nil)
+      (re-search-backward "Operating System: \\(.*\\)")
+      (match-string 1))))
 
 (defun eshell-info-banner--get-os-information-from-lsb-release ()
   "Read the operating system information from lsb_release"
@@ -329,21 +336,25 @@ If RELEASE-FILE is nil, use '/etc/os-release'."
 
 (defun eshell-info-banner--get-os-information ()
   "Get operating system identifying information."
-  (cond
-   ((executable-find "hostnamectl") (eshell-info-banner--get-os-information-from-hostnamectl))
-   ((executable-find "lsb_release") (eshell-info-banner--get-os-information-from-lsb-release))
-   ((file-exists-p "/etc/os-release") (eshell-info-banner--get-os-information-from-release-file))
-   ((executable-find "reg") (eshell-info-banner--get-os-information-from-registry))
-   (t "Unknown")))
+  (let ((prefix (if eshell-info-banner-tramp-aware (file-remote-p default-directory) "")))
+    (cond
+     ((executable-find "hostnamectl" eshell-info-banner-tramp-aware) (eshell-info-banner--get-os-information-from-hostnamectl))
+     ((executable-find "lsb_release" eshell-info-banner-tramp-aware) (eshell-info-banner--get-os-information-from-lsb-release))
+     ((file-exists-p (concat prefix "/etc/os-release")) (eshell-info-banner--get-os-information-from-release-file))
+     ((executable-find "reg") (eshell-info-banner--get-os-information-from-registry))
+     (t "Unknown"))))
 
                                         ; Public functions ;;;;;;;;;;;;;;;;;;;;
 
 ;;;###autoload
 (defun eshell-info-banner ()
   "Banner for Eshell displaying system information."
-  (let* ((partitions    (eshell-info-banner--get-mounted-partitions))
+  (let* ((default-directory (if eshell-info-banner-tramp-aware default-directory "~"))
+	 (partitions    (eshell-info-banner--get-mounted-partitions))
          (os            (eshell-info-banner--get-os-information))
-         (hostname      (system-name))
+         (hostname      (if  eshell-info-banner-tramp-aware
+			    (or (file-remote-p default-directory 'host) (system-name))
+			  system-name))
          (uptime        (s-chop-prefix "up "
                                        (s-trim (shell-command-to-string "uptime -p"))))
          (kernel        (concat (s-trim (shell-command-to-string "uname -s"))
