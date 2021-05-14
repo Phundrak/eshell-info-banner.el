@@ -63,6 +63,13 @@ A couple of variables can be edited by the user in order to configure
   level should be displayed as a warning. Default value: ~75~
 - ~eshell-info-banner-critical-percentage~ :: Percentage from which the
   level should be displayed as critical. Default value ~90~
+- ~eshell-info-banner-tramp-aware~ :: When using Eshell through TRAMP,
+  you can decide whether ~eshell-info-banner~ will display information
+  about the remote system you are connected to or only display
+  information about your local system. To achieve this, set
+  ~eshell-info-banner-tramp-aware~ to ~t~ to display information on the
+  remote system or to ~nil~ to keep local information only. Default
+  value ~t~.
 
 Don’t like the colors used by the package? They should follow by
 default your theme, but you can customize the following faces:
@@ -100,10 +107,11 @@ through their mountpoint instead through a configurable
 alist. Change to come in future versions!
 
 ** Better support for other OSes
-Displaying the OS name only works on systems that have an
-~/etc/os-release~ file and ~df~ available in Eshell’s path —i.e. it will
-not work on Windows, and probably not on macOS. This should be fixed
-someday. (And *BSD maybe?)
+Displaying the OS name only works on Linux systems that have an
+~/etc/os-release~ file and ~df~ available in Eshell’s path, or on Windows
+at least partially —i.e. it will probably not work correctly on macOS
+and on exotic Linux distributions. This should be fixed someday. (And
+*BSD maybe?) See [[https://github.com/Phundrak/eshell-info-banner.el/issues/4][this issue]].
 
 * License
 ~eshell-info-banner.el~ is available under the GNU GPL-3.0 license. You
