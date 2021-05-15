@@ -318,7 +318,7 @@ If RELEASE-FILE is nil, use '/etc/os-release'."
       (match-string 1))))
 
 (defun eshell-info-banner--get-os-information-from-lsb-release ()
-  "Read the operating system information from lsb_release"
+  "Read the operating system information from lsb_release."
   (shell-command-to-string "lsb_release -d -s"))
 
 (defun eshell-info-banner--get-os-information-from-registry ()
