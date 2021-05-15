@@ -16,7 +16,7 @@ This package is geared towards Linux in particular, I am pretty sure
 it will not work on Windows, and there will probably be bugs on
 macOS. PR are welcome if you want to fix that!
 
-* Installation 
+* Installation
 A couple of options are available for installing
 ~eshell-info-banner.el~. The first one is to clone the repository in
 your ~load-path~ and add the following to your ~.emacs~ or your ~init.el~:
@@ -49,27 +49,45 @@ or non-gnu elpa.
 * Customizing
 A couple of variables can be edited by the user in order to configure
 ~eshell-info-banner.el~:
+- ~eshell-info-banner-partition-prefixes~ :: Filter for which
+  mountpoints are to be shown to the user. By default, only partitions
+  mounted on a filesystem (as displayed by the command ~df -Hl~)
+  prefixed by ~/dev~ are shown, but you can modify it by adding other
+  prefixes to this list. For instance, to detect ZFS roots, you can
+  set its value to ~'("/dev" "zroot")~.
+
+  Default value: ~'("/dev")~.
 - ~eshell-info-banner-shorten-path-from~ :: Maximum length of the mount
   path of a partition before it gets abbreviated. Set it to ridiculous
   numbers in order to disable it (something like ~1000~ should be more
-  than enough). Default value: ~7~
+  than enough).
+
+  Default value: ~7~
 - ~eshell-info-banner-width~ :: *Minimum* width of the banner. Be aware
   the banner will automatically select the minimal width required to
   display everything it wants to display if ~eshell-info-banner-width~
-  is too small. Default value: ~80~
+  is too small.
+  Default value: ~80~
 - ~eshell-info-banner-progress-bar-char~ :: Character to fill the
-  progress bar with. Default value: ~=~
+  progress bar with.
+
+  Default value: ~=~
 - ~eshell-info-banner-warning-percentage~ :: Percentage from which the
-  level should be displayed as a warning. Default value: ~75~
+  level should be displayed as a warning.
+
+  Default value: ~75~
 - ~eshell-info-banner-critical-percentage~ :: Percentage from which the
-  level should be displayed as critical. Default value ~90~
+  level should be displayed as critical.
+
+  Default value ~90~
 - ~eshell-info-banner-tramp-aware~ :: When using Eshell through TRAMP,
   you can decide whether ~eshell-info-banner~ will display information
   about the remote system you are connected to or only display
   information about your local system. To achieve this, set
   ~eshell-info-banner-tramp-aware~ to ~t~ to display information on the
-  remote system or to ~nil~ to keep local information only. Default
-  value ~t~.
+  remote system or to ~nil~ to keep local information only.
+
+  Default value ~t~.
 
 Don’t like the colors used by the package? They should follow by
 default your theme, but you can customize the following faces:

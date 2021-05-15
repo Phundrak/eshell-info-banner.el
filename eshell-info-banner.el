@@ -77,6 +77,11 @@
   :group 'eshell-info-banner
   :type 'float)
 
+(defcustom eshell-info-banner-partition-prefixes '("/dev")
+  "List of prefixes for detecting which partitions to display."
+  :group 'eshell-info-banner
+  :type 'list)
+
                                         ; Faces ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defface eshell-info-banner-background-face
@@ -155,7 +160,9 @@ Return detected partitions as a list of structs."
                     (used       (nth 2 partition))
                     (percent    (nth 4 partition))
                     (mount      (nth 5 partition)))
-               (when (string-prefix-p "/dev" filesystem t)
+               (when (seq-some (lambda (prefix)
+                                 (string-prefix-p prefix filesystem t))
+                               eshell-info-banner-partition-prefixes)
                  (make-eshell-info-banner--mounted-partitions
                   :path (if (> (length mount) eshell-info-banner-shorten-path-from)
                             (eshell-info-banner--abbr-path mount t)
