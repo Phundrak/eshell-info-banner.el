@@ -173,20 +173,14 @@ Return detected partitions as a list of structs."
                             (string-trim-left percent (regexp-quote "%")))))))
            partitions)))
 
-(defun eshell-info-banner--get-longest-path (partitions &optional len)
-  "Find the length of the longest partition path in `PARTITIONS'.
+(defun eshell-info-banner--get-longest-path (partitions)
+  "Return the length of the longest partition path in `PARTITIONS'.
 
-The variable `LEN' should only be used internally and represents
-the longest path so far, or the minimum length of text present on
-the left side of the banner."
-  (let ((len (if (null len)
-                 eshell-info-banner--min-length-left
-               len)))
-    (if (null partitions)
-        len
-      (let* ((path (eshell-info-banner--mounted-partitions-path (car partitions)))
-             (len (max (length path) len)))
-        (eshell-info-banner--get-longest-path (cdr partitions) len)))))
+The returned value is in any case greater than `eshell-info-banner--min-length-left'."
+  (-reduce-from (lambda (len partition)
+		  (max len (length (eshell-info-banner--mounted-partitions-path partition))))
+		eshell-info-banner--min-length-left
+		partitions))
 
 (defun eshell-info-banner--get-color-percentage (percentage)
   "Display a `PERCENTAGE' with its according face."
