@@ -54,9 +54,9 @@ A couple of variables can be edited by the user in order to configure
   mounted on a filesystem (as displayed by the command ~df -Hl~)
   prefixed by ~/dev~ are shown, but you can modify it by adding other
   prefixes to this list. For instance, to detect ZFS roots, you can
-  set its value to ~'("/dev" "zroot")~.
+  set its value to ~("/dev" "zroot")~.
 
-  Default value: ~'("/dev")~.
+  Default value: ~("/dev")~
 - ~eshell-info-banner-shorten-path-from~ :: Maximum length of the mount
   path of a partition before it gets abbreviated. Set it to ridiculous
   numbers in order to disable it (something like ~1000~ should be more
@@ -87,7 +87,7 @@ A couple of variables can be edited by the user in order to configure
   ~eshell-info-banner-tramp-aware~ to ~t~ to display information on the
   remote system or to ~nil~ to keep local information only.
 
-  Default value ~t~.
+  Default value ~t~
 
 Don’t like the colors used by the package? They should follow by
 default your theme, but you can customize the following faces:
