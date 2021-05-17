@@ -42,7 +42,10 @@
 (require 'f)
 (require 'em-banner)
 
-                                        ; Groups ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                                        ;                Group                ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defgroup eshell-info-banner ()
   "System information as your Eshell banner."
@@ -50,12 +53,18 @@
   :link '(url-link :tag "Gitea" "https://labs.phundrak.com/phundrak/eshell-info-banner.el")
   :link '(url-link :tag "Github" "https://github.com/Phundrak/eshell-info-banner.el"))
 
-                                        ; Constants ;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                                        ;              Constants              ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defconst eshell-info-banner--min-length-left 8
   "Minimum length of text on the left hand side of the banner.")
 
-                                        ; Custom variables ;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                                        ;           Custom variables          ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defcustom eshell-info-banner-tramp-aware t
   "Make `eshell-info-banner' TRAMP aware."
@@ -98,7 +107,10 @@
   :group 'eshell-info-banner
   :type 'list)
 
-                                        ; Faces ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                                        ;                Faces                ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defface eshell-info-banner-background-face
   '((t :inherit font-lock-comment-face))
@@ -120,19 +132,25 @@
   "Face for eshell-info-banner progress bars displaying critical levels."
   :group 'eshell-info-banner)
 
-                                        ; Structs ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(cl-defstruct eshell-info-banner--mounted-partitions
-  "Object representing a mounted partition found in the system."
-  path size used percent)
-
-                                        ; Macros ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                                        ;                Macros               ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defmacro eshell-info-banner--with-face (str &rest properties)
   "Helper macro for applying face `PROPERTIES' to `STR'."
   `(propertize ,str 'face (list ,@properties)))
 
-                                        ; Internal functions ;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                                        ;          Internal functions         ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+                                        ; Partitions ;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(cl-defstruct eshell-info-banner--mounted-partitions
+  "Object representing a mounted partition found in the system."
+  path size used percent)
 
 (defun eshell-info-banner--abbr-path (path &optional abbr)
   "Remove `$HOME' from `PATH', abbreviate parent dirs if `ABBR' non nil.
@@ -314,6 +332,7 @@ the warning face with a battery level of 25% or less."
                                      (number-to-string percentage)
                                      :inherit (eshell-info-banner--get-color-percentage (- 100.0 percentage)))))))))
 
+
                                         ; Operating system identification ;;;;;;;;;;;;;;;;;;
 (defun eshell-info-banner--get-os-information-from-release-file (&optional release-file)
   "Read the operating system from the given RELEASE-FILE.
@@ -361,17 +380,20 @@ If RELEASE-FILE is nil, use '/etc/os-release'."
      ((executable-find "reg") (eshell-info-banner--get-os-information-from-registry))
      (t "Unknown"))))
 
-                                        ; Public functions ;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                                        ;           Public functions          ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;###autoload
 (defun eshell-info-banner ()
   "Banner for Eshell displaying system information."
   (let* ((default-directory (if eshell-info-banner-tramp-aware default-directory "~"))
-	 (partitions    (eshell-info-banner--get-mounted-partitions))
+         (partitions    (eshell-info-banner--get-mounted-partitions))
          (os            (eshell-info-banner--get-os-information))
          (hostname      (if  eshell-info-banner-tramp-aware
-			    (or (file-remote-p default-directory 'host) (system-name))
-			  system-name))
+                            (or (file-remote-p default-directory 'host) (system-name))
+                          (system-name)))
          (uptime        (s-chop-prefix "up "
                                        (s-trim (shell-command-to-string "uptime -p"))))
          (kernel        (concat (s-trim (shell-command-to-string "uname -s"))
