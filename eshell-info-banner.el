@@ -24,6 +24,16 @@
 
 ;;; Commentary:
 
+;; `eshell-info-banner' is a utility for cerating an informative
+;; banner akin to fish_greeting if fish shell but for Eshell.  It can
+;; provide information on:
+;; - the OS’ name
+;; - the OS’ kernel
+;; - the hostname
+;; - the uptime
+;; - the system’s memory usage (RAM, swap, disk)
+;; - the battery status
+;; It can be TRAMP-aware or not, depending on the user’s preferences.
 
 ;;; Code:
 
@@ -50,32 +60,38 @@
 (defcustom eshell-info-banner-tramp-aware t
   "Make `eshell-info-banner' TRAMP aware."
   :group 'eshell-info-banner
-  :type 'boolean)
+  :type 'boolean
+  :safe #'booleanp)
 
 (defcustom eshell-info-banner-shorten-path-from 7
   "From which length should a path be shortened?"
   :group 'eshell-info-banner
-  :type 'integer)
+  :type 'integer
+  :safe #'integer-or-marker-p)
 
 (defcustom eshell-info-banner-width 80
   "Width of the info banner to be shown in Eshell."
   :group 'eshell-info-banner
-  :type 'integer)
+  :type 'integer
+  :safe #'integer-or-marker-p)
 
 (defcustom eshell-info-banner-progress-bar-char "="
   "Character to fill the progress bars with."
   :group 'eshell-info-banner
-  :type 'char)
+  :type 'string
+  :safe #'stringp)
 
 (defcustom eshell-info-banner-warning-percentage 75
   "When to warn about a percentage."
   :group 'eshell-info-banner
-  :type 'float)
+  :type 'float
+  :safe #'floatp)
 
 (defcustom eshell-info-banner-critical-percentage 90
   "When a percentage becomes critical."
   :group 'eshell-info-banner
-  :type 'float)
+  :type 'float
+  :safe #'floatp)
 
 (defcustom eshell-info-banner-partition-prefixes '("/dev")
   "List of prefixes for detecting which partitions to display."
