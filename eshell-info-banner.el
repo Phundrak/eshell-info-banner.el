@@ -2,7 +2,7 @@
 
 ;; Author: Lucien Cartier-Tilet <lucien@phundrak.com>
 ;; Maintainer: Lucien Cartier-Tilet <lucien@phundrak.com>
-;; Version: 0.3.0
+;; Version: 0.4.0
 ;; Package-Requires: ((emacs "24") (dash "2") (f "0.20") (s "1"))
 ;; Homepage: https://labs.phundrak.com/phundrak/eshell-info-banner.el
 
@@ -152,6 +152,15 @@
   "Object representing a mounted partition found in the system."
   path size used percent)
 
+(defun eshell-info-banner--get-longest-path (partitions)
+  "Return the length of the longest partition path in `PARTITIONS'.
+
+The returned value is in any case greater than `eshell-info-banner--min-length-left'."
+  (-reduce-from (lambda (len partition)
+                  (max len (length (eshell-info-banner--mounted-partitions-path partition))))
+                eshell-info-banner--min-length-left
+                partitions))
+
 (defun eshell-info-banner--abbr-path (path &optional abbr)
   "Remove `$HOME' from `PATH', abbreviate parent dirs if `ABBR' non nil.
 
@@ -182,10 +191,12 @@ neither of these, an error will be thrown by the function."
             (eshell-info-banner--abbr-path (cdr path))))
    (t (error "Invalid argument %s, neither stringp or listp" path))))
 
-(defun eshell-info-banner--get-mounted-partitions ()
-  "Detect mounted partitions on the system.
+(defun eshell-info-banner--get-mounted-partitions/gnu ()
+  "Detect mounted partitions on a Linux system.
 
-Return detected partitions as a list of structs."
+Return detected partitions as a list of structs.  See
+`eshell-info-banner-partition-prefixes' to see how partitions are
+chosen."
   (let ((partitions (split-string (shell-command-to-string "LANG=C df -lH") (regexp-quote "\n") t)))
     (-keep (lambda (partition)
              (let* ((partition  (split-string partition " " t))
@@ -207,14 +218,167 @@ Return detected partitions as a list of structs."
                             (string-trim-left percent (regexp-quote "%")))))))
            partitions)))
 
-(defun eshell-info-banner--get-longest-path (partitions)
-  "Return the length of the longest partition path in `PARTITIONS'.
+(defun eshell-info-banner--get-mounted-partitions/windows ()
+  "Detect mounted partitions on a Windows system.
 
-The returned value is in any case greater than `eshell-info-banner--min-length-left'."
-  (-reduce-from (lambda (len partition)
-		  (max len (length (eshell-info-banner--mounted-partitions-path partition))))
-		eshell-info-banner--min-length-left
-		partitions))
+Return detected partitions as a list of structs.  See
+`eshell-info-banner-partition-prefixes' to see how partitions are
+chosen."
+  (progn
+    (message "Partition detection for Windows and DOS not yet supported.")
+    nil))
+
+(defun eshell-info-banner--get-mounted-partitions/darwin ()
+  "Detect mounted partitions on a Darwin/macOS system.
+
+Return detected partitions as a list of structs.  See
+`eshell-info-banner-partition-prefixes' to see how partitions are
+chosen."
+  (progn
+    (message "Partition detection for macOS and Darwin-based OSes not yet supported.")
+    nil))
+
+(defun eshell-info-banner--get-mounted-partitions ()
+  "Detect mounted partitions on the system.
+
+Return detected partitions as a list of structs."
+  (pcase system-type
+    ((or 'gnu 'gnu/linux 'gnu/kfreebsd)
+     (eshell-info-banner--get-mounted-partitions/gnu))
+    ((or 'ms-dos 'windows-nt 'cygwin)
+     (eshell-info-banner--get-mounted-partitions/windows))
+    ('darwin
+     (eshell-info-banner--get-mounted-partitions/darwin))
+    (other
+     (progn
+       (message "Partition detection for %s not yet supported." other)
+       nil))))
+
+(defun eshell-info-banner--partition-to-string (partition text-padding bar-length)
+  "Display a progress bar showing how full a `PARTITION' is.
+
+For TEXT-PADDING and BAR-LENGTH, see the documentation of
+`eshell-info-banner--display-memory'."
+  (let ((percentage (eshell-info-banner--mounted-partitions-percent partition)))
+    (concat (s-pad-right text-padding "."
+                         (eshell-info-banner--with-face (eshell-info-banner--mounted-partitions-path partition)
+                                                        :weight 'bold))
+            ": "
+            (eshell-info-banner--progress-bar bar-length percentage)
+            (format " %6s / %-5s (%3s%%)"
+                    (eshell-info-banner--mounted-partitions-used partition)
+                    (eshell-info-banner--mounted-partitions-size partition)
+                    (eshell-info-banner--with-face
+                     (number-to-string percentage)
+                     :inherit (eshell-info-banner--get-color-percentage percentage))))))
+
+(defun eshell-info-banner--display-partitions (text-padding bar-length)
+  "Display the detected mounted partitions of the system.
+
+For TEXT-PADDING and BAR-LENGTH, see the documentation of
+`eshell-info-banner--display-memory'."
+  (mapconcat (lambda (partition)
+               (eshell-info-banner--partition-to-string partition text-padding bar-length))
+             (eshell-info-banner--get-mounted-partitions)
+             "\n"))
+
+
+                                        ; Memory ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun eshell-info-banner--get-memory/linux ()
+  "Get memory usage for GNU/Linux and Hurd."
+  (-map (lambda (line)
+          (let* ((line (split-string line " " t)))
+            (list (s-chop-suffix ":" (nth 0 line))   ; name
+                  (string-to-number (nth 1 line))    ; total
+                  (string-to-number (nth 2 line))))) ; used
+        (split-string (shell-command-to-string "LANG=C free -b | tail -2")
+                      "\n"
+                      t)))
+
+(defun eshell-info-banner--get-memory/bsd ()
+  "Get memory usage for *BSD."
+  (message "Memory usage not yet implemented for BSD")
+  nil)
+
+(defun eshell-info-banner--get-memory/darwin ()
+  "Get memory usage for macOS and Darwin-based OSes."
+  (message "Memory usage not yet implemented for macOS and Darwin-based OSes")
+  nil)
+
+(defun eshell-info-banner--get-memory/windows ()
+  "Get memory usage for Window."
+  (message "Memory usage not yet implemented for Windows and DOS")
+  nil)
+
+(defun eshell-info-banner--get-memory ()
+  "Get memory usage of current operating system.
+
+Return a list of either one or two elements.  The first element
+represents the RAM, the second represents the swap.  Both are
+lists and contain three elements: the name of the memory, the
+total amount of memory available, and the amount of used memory,
+in bytes."
+  (pcase system-type
+    ((or 'gnu 'gnu/linux)
+     (eshell-info-banner--get-memory/linux))
+    ('gnu/kfreebsd
+     (eshell-info-banner--get-memory/bsd))
+    ('darwin
+     (eshell-info-banner--get-memory/darwin))
+    ((or 'ms-dos 'windows-nt 'cygwin)
+     (eshell-info-banner--get-memory/windows))
+    (os (message "Memory usage not yet implemented for %s" os)
+        nil)))
+
+(defun eshell-info-banner--memory-to-string (type total used text-padding bar-length)
+  "Display a memory’s usage with a progress bar.
+
+The `TYPE' of memory will be the text on the far left, while
+`USED' and `TOTAL' will be displayed on the right of the progress
+bar.  From them, a percentage will be computed which will be used
+to display a colored percentage of the progress bar and it will
+be displayed on the far right.
+
+`TEXT-PADDING' will determine how many dots are necessary between
+`TYPE' and the colon.
+
+`BAR-LENGTH' determines the length of the progress bar to be
+displayed."
+  (let ((percentage (if (= used 0)
+                        0
+                      (/ (* 100 used) total))))
+    (concat (s-pad-right text-padding "." type)
+            ": "
+            (eshell-info-banner--progress-bar bar-length percentage)
+            (format " %6s / %-5s (%3s%%)"
+                    (file-size-human-readable used)
+                    (file-size-human-readable total)
+                    (eshell-info-banner--with-face (number-to-string percentage)
+                                                   :inherit (eshell-info-banner--get-color-percentage percentage))))))
+
+(defun eshell-info-banner--display-memory (text-padding bar-length)
+  "Display memories detected on your system.
+
+This function will create a string used by `eshell-info-banner'
+in order to display memories detected by the package, generally
+the Ram at least, sometimes the swap too.  Displayed progress
+bars will have this appearance:
+
+TYPE......: [=========] XXG / XXG  (XX%)
+
+`TEXT-PADDING': the space allocated to the text at the left of the
+progress bar.
+
+`BAR-LENGTH': the length of the progress bar."
+  (mapconcat (lambda (mem)
+               (eshell-info-banner--memory-to-string (nth 0 mem) (nth 1 mem)
+                                                     (nth 2 mem) text-padding
+                                                     bar-length))
+             (eshell-info-banner--get-memory)
+             "\n"))
+
+
+                                        ; Display information ;;;;;;;;;;;;;;;;;
 
 (defun eshell-info-banner--get-color-percentage (percentage)
   "Display a `PERCENTAGE' with its according face."
@@ -252,56 +416,6 @@ critical levels close to 0 rather than 100."
                                     :weight 'bold
                                     :inherit 'eshell-info-banner-background-face)
      (eshell-info-banner--with-face "]" :weight 'bold))))
-
-(defun eshell-info-banner--display-memory (type used total text-padding bar-length)
-  "Display a memory’s usage with a progress bar.
-Displayed progress bars will have this appearance:
-
-TYPE......: [=========] XXG / XXG  (XX%)
-
-The `TYPE' of memory will be the text on the far left, while
-`USED' and `TOTAL' will be displayed on the right of the progress
-bar.  From them, a percentage will be computed which will be used
-to display a colored percentage of the progress bar and it will
-be displayed on the far right.
-
-`TEXT-PADDING' will determine how many dots are necessary between
-`TYPE' and the colon.
-
-`BAR-LENGTH' determines the length of the progress bar to be
-displayed."
-  (let ((percentage (if (= used 0)
-                        0
-                      (/ (* 100 used) total))))
-    (concat (s-pad-right text-padding "." type)
-            ": "
-            (eshell-info-banner--progress-bar bar-length percentage)
-            (format " %6s / %-5s (%3s%%)\n"
-                    (file-size-human-readable used)
-                    (file-size-human-readable total)
-                    (eshell-info-banner--with-face (number-to-string percentage)
-                                                   :inherit (eshell-info-banner--get-color-percentage percentage))))))
-
-(defun eshell-info-banner--display-partition (partition text-padding bar-length)
-  "Display a progress bar showing how full a `PARTITION' is.
-
-`BAR-LENGTH' represents the total length of the progress bar,
-while `TEXT-PADDING' indicates how many dots are to be put
-between the partition’s name and the colon following it.
-
-See also `eshell-info-banner--display-memory'."
-  (let ((percentage (eshell-info-banner--mounted-partitions-percent partition)))
-    (concat (s-pad-right text-padding "."
-                         (eshell-info-banner--with-face (eshell-info-banner--mounted-partitions-path partition)
-                                                        :weight 'bold))
-            ": "
-            (eshell-info-banner--progress-bar bar-length percentage)
-            (format " %6s / %-5s (%3s%%)"
-                    (eshell-info-banner--mounted-partitions-used partition)
-                    (eshell-info-banner--mounted-partitions-size partition)
-                    (eshell-info-banner--with-face
-                     (number-to-string percentage)
-                     :inherit (eshell-info-banner--get-color-percentage percentage))))))
 
 (defun eshell-info-banner--display-battery (text-padding bar-length)
   "If the computer has a battery, display its level.
@@ -389,7 +503,6 @@ If RELEASE-FILE is nil, use '/etc/os-release'."
 (defun eshell-info-banner ()
   "Banner for Eshell displaying system information."
   (let* ((default-directory (if eshell-info-banner-tramp-aware default-directory "~"))
-         (partitions    (eshell-info-banner--get-mounted-partitions))
          (os            (eshell-info-banner--get-os-information))
          (hostname      (if  eshell-info-banner-tramp-aware
                             (or (file-remote-p default-directory 'host) (system-name))
@@ -409,13 +522,7 @@ If RELEASE-FILE is nil, use '/etc/os-release'."
          (tot-width     (max (+ left-length right-text 3)
                              eshell-info-banner-width))
          (middle-padding (- tot-width right-text left-padding 4))
-         (memory        (-map (lambda (line)
-                                (s-split " " line t))
-                              (s-split "\n"
-                                       (shell-command-to-string "LANG=C free -b | tail -2")
-                                       t)))
-         (ram           (nth 0 memory))
-         (swap          (nth 1 memory))
+
          (bar-length    (- tot-width left-padding 4 22)))
     (concat (format "%s\n" (s-repeat tot-width eshell-info-banner-progress-bar-char))
             (format "%s: %s Kernel.: %s\n"
@@ -429,20 +536,9 @@ If RELEASE-FILE is nil, use '/etc/os-release'."
                     (s-pad-right middle-padding " " (eshell-info-banner--with-face hostname :weight 'bold))
                     uptime)
             (eshell-info-banner--display-battery left-padding bar-length)
-            (eshell-info-banner--display-memory "Ram"
-                                                (string-to-number (nth 2 ram))
-                                                (string-to-number (nth 1 ram))
-                                                left-padding
-                                                bar-length)
-            (eshell-info-banner--display-memory "Swap"
-                                                (string-to-number (nth 2 swap))
-                                                (string-to-number (nth 1 swap))
-                                                left-padding
-                                                bar-length)
-            (mapconcat (lambda (partition)
-                         (eshell-info-banner--display-partition partition left-padding bar-length))
-                       partitions
-                       "\n")
+            (eshell-info-banner--display-memory left-padding bar-length)
+            "\n"
+            (eshell-info-banner--display-partitions left-padding bar-length)
             (format "\n%s\n" (s-repeat tot-width eshell-info-banner-progress-bar-char)))))
 
 ;;;###autoload
