@@ -512,6 +512,7 @@ If RELEASE-FILE is nil, use '/etc/os-release'."
          (kernel        (concat (s-trim (shell-command-to-string "uname -s"))
                                 " "
                                 (s-trim (shell-command-to-string "uname -r"))))
+         (partitions    (eshell-info-banner--get-mounted-partitions))
          (left-padding  (eshell-info-banner--get-longest-path partitions))
          (left-text     (max (length os)
                              (length hostname)))
