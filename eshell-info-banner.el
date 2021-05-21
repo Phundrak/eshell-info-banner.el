@@ -515,19 +515,38 @@ If RELEASE-FILE is nil, use '/etc/os-release'."
 (defun eshell-info-banner--get-os-information ()
   "Get operating system identifying information."
   (let ((prefix (if eshell-info-banner-tramp-aware (file-remote-p default-directory) "")))
-    (cond
-     ;; Linux
-     ((executable-find "hostnamectl" eshell-info-banner-tramp-aware)
-      (eshell-info-banner--get-os-information-from-hostnamectl))
-     ((executable-find "lsb_release" eshell-info-banner-tramp-aware)
-      (eshell-info-banner--get-os-information-from-lsb-release))
-     ((file-exists-p (concat prefix "/etc/os-release"))
-      (eshell-info-banner--get-os-information-from-release-file))
 
-     ;; Windows
-     ((executable-find "reg")
-      (eshell-info-banner--get-os-information-from-registry))
-     (t "Unknown"))))
+    (pcase system-type
+      ((or 'ms-dos 'windows-nt 'cygwin)
+       (let ((os (eshell-info-banner--get-os-information-from-registry)))
+         (save-match-data
+           (string-match "\\([^()]+\\) *(\\([^()]+\\))" os)
+           `(,(s-trim (substring-no-properties os
+                                               (match-beginning 1)
+                                               (match-end 1)))
+             .
+             ,(substring-no-properties os
+                                       (match-beginning 2)
+                                       (match-end 2))))))
+      ((or 'gnu 'gnu/linux 'gnu/kfreebsd 'darwin)
+       `(,(cond
+           ((executable-find "hostnamectl" eshell-info-banner-tramp-aware)
+            (eshell-info-banner--get-os-information-from-hostnamectl))
+           ((executable-find "lsb_release" eshell-info-banner-tramp-aware)
+            (eshell-info-banner--get-os-information-from-lsb-release))
+           ((file-exists-p (concat prefix "/etc/os-release"))
+            (eshell-info-banner--get-os-information-from-release-file))
+           ((executable-find "shepherd")
+            (let ((distro (car (s-lines (shell-command-to-string "guix -V")))))
+              (save-match-data
+                (string-match "\\([0-9\\.]+\\)" distro)
+                (concat "Guix System "
+                        (substring-no-properties distro
+                                                 (match-beginning 1)
+                                                 (match-end 1))))))
+           (t "Unknown"))
+         .
+         ,(s-trim (shell-command-to-string "uname -rs")))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -538,12 +557,13 @@ If RELEASE-FILE is nil, use '/etc/os-release'."
 (defun eshell-info-banner ()
   "Banner for Eshell displaying system information."
   (let* ((default-directory (if eshell-info-banner-tramp-aware default-directory "~"))
-         (os            (eshell-info-banner--get-os-information))
+         (system-info   (eshell-info-banner--get-os-information))
+         (os            (car system-info))
+         (kernel        (cdr system-info))
          (hostname      (if  eshell-info-banner-tramp-aware
                             (or (file-remote-p default-directory 'host) (system-name))
                           (system-name)))
          (uptime        (eshell-info-banner--get-uptime))
-         (kernel        (s-trim (shell-command-to-string "uname -sr")))
          (partitions    (eshell-info-banner--get-mounted-partitions))
          (left-padding  (eshell-info-banner--get-longest-path partitions))
          (left-text     (max (length os)
