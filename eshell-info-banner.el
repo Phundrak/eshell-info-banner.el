@@ -2,7 +2,7 @@
 
 ;; Author: Lucien Cartier-Tilet <lucien@phundrak.com>
 ;; Maintainer: Lucien Cartier-Tilet <lucien@phundrak.com>
-;; Version: 0.4.0
+;; Version: 0.4.1
 ;; Package-Requires: ((emacs "24") (dash "2") (f "0.20") (s "1"))
 ;; Homepage: https://labs.phundrak.com/phundrak/eshell-info-banner.el
 
@@ -157,7 +157,8 @@
 
 The returned value is in any case greater than `eshell-info-banner--min-length-left'."
   (-reduce-from (lambda (len partition)
-                  (max len (length (eshell-info-banner--mounted-partitions-path partition))))
+                  (max len
+                       (length (eshell-info-banner--mounted-partitions-path partition))))
                 eshell-info-banner--min-length-left
                 partitions))
 
@@ -177,7 +178,8 @@ neither of these, an error will be thrown by the function."
   (cond
    ((stringp path) (abbreviate-file-name
                     (if abbr
-                        (eshell-info-banner--abbr-path (f-split (eshell-info-banner--abbr-path path)))
+                        (eshell-info-banner--abbr-path
+                         (f-split (eshell-info-banner--abbr-path path)))
                       path)))
    ((null path) "")
    ((listp path)
@@ -260,9 +262,11 @@ Return detected partitions as a list of structs."
 For TEXT-PADDING and BAR-LENGTH, see the documentation of
 `eshell-info-banner--display-memory'."
   (let ((percentage (eshell-info-banner--mounted-partitions-percent partition)))
-    (concat (s-pad-right text-padding "."
-                         (eshell-info-banner--with-face (eshell-info-banner--mounted-partitions-path partition)
-                                                        :weight 'bold))
+    (concat (s-pad-right text-padding
+                         "."
+                         (eshell-info-banner--with-face
+                          (eshell-info-banner--mounted-partitions-path partition)
+                          :weight 'bold))
             ": "
             (eshell-info-banner--progress-bar bar-length percentage)
             (format " %6s / %-5s (%3s%%)"
@@ -353,8 +357,9 @@ displayed."
             (format " %6s / %-5s (%3s%%)"
                     (file-size-human-readable used)
                     (file-size-human-readable total)
-                    (eshell-info-banner--with-face (number-to-string percentage)
-                                                   :inherit (eshell-info-banner--get-color-percentage percentage))))))
+                    (eshell-info-banner--with-face
+                     (number-to-string percentage)
+                     :inherit (eshell-info-banner--get-color-percentage percentage))))))
 
 (defun eshell-info-banner--display-memory (text-padding bar-length)
   "Display memories detected on your system.
@@ -435,16 +440,19 @@ the warning face with a battery level of 25% or less."
         ""
       (let ((percentage (save-match-data
                           (string-match "\\([0-9]+\\)\\(\\.[0-9]\\)?%" battery-level)
-                          (string-to-number (substring battery-level (match-beginning 1) (match-end 1))))))
+                          (string-to-number (substring battery-level
+                                                       (match-beginning 1)
+                                                       (match-end 1))))))
         (concat (s-pad-right text-padding "." "Battery")
                 ": "
                 (eshell-info-banner--progress-bar bar-length
                                                   percentage
                                                   t)
                 (s-repeat 16 " ")
-                (format "(%3s%%)\n" (eshell-info-banner--with-face
-                                     (number-to-string percentage)
-                                     :inherit (eshell-info-banner--get-color-percentage (- 100.0 percentage)))))))))
+                (format "(%3s%%)\n"
+                        (eshell-info-banner--with-face
+                         (number-to-string percentage)
+                         :inherit (eshell-info-banner--get-color-percentage (- 100.0 percentage)))))))))
 
 
                                         ; Operating system identification ;;;;;;;;;;;;;;;;;;
@@ -488,10 +496,17 @@ If RELEASE-FILE is nil, use '/etc/os-release'."
   "Get operating system identifying information."
   (let ((prefix (if eshell-info-banner-tramp-aware (file-remote-p default-directory) "")))
     (cond
-     ((executable-find "hostnamectl" eshell-info-banner-tramp-aware) (eshell-info-banner--get-os-information-from-hostnamectl))
-     ((executable-find "lsb_release" eshell-info-banner-tramp-aware) (eshell-info-banner--get-os-information-from-lsb-release))
-     ((file-exists-p (concat prefix "/etc/os-release")) (eshell-info-banner--get-os-information-from-release-file))
-     ((executable-find "reg") (eshell-info-banner--get-os-information-from-registry))
+     ;; Linux
+     ((executable-find "hostnamectl" eshell-info-banner-tramp-aware)
+      (eshell-info-banner--get-os-information-from-hostnamectl))
+     ((executable-find "lsb_release" eshell-info-banner-tramp-aware)
+      (eshell-info-banner--get-os-information-from-lsb-release))
+     ((file-exists-p (concat prefix "/etc/os-release"))
+      (eshell-info-banner--get-os-information-from-release-file))
+
+     ;; Windows
+     ((executable-find "reg")
+      (eshell-info-banner--get-os-information-from-registry))
      (t "Unknown"))))
 
 
