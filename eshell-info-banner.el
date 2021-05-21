@@ -146,6 +146,25 @@
                                         ;          Internal functions         ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+                                        ; Misc ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun eshell-info-banner--get-uptime ()
+  "Get uptime of machine if `uptime' is available.
+
+If the executable `uptime' is not found, return nil."
+  (when (executable-find "uptime")
+    (let ((uptime-str (shell-command-to-string "uptime -p")))
+      (if (not (string-match-p "invalid" uptime-str))
+          (s-chop-prefix "up " (s-trim uptime-str))
+        (let ((uptime-str (shell-command-to-string "uptime")))
+          (save-match-data
+            (string-match " *[0-9:]+ *up *\\([0-9:]+\\)," uptime-str)
+            (substring-no-properties uptime-str
+                                     (match-beginning 1)
+                                     (match-end 1))))))))
+
+(eshell-info-banner--get-uptime)
+
                                         ; Partitions ;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (cl-defstruct eshell-info-banner--mounted-partitions
@@ -522,8 +541,7 @@ If RELEASE-FILE is nil, use '/etc/os-release'."
          (hostname      (if  eshell-info-banner-tramp-aware
                             (or (file-remote-p default-directory 'host) (system-name))
                           (system-name)))
-         (uptime        (s-chop-prefix "up "
-                                       (s-trim (shell-command-to-string "uptime -p"))))
+         (uptime        (eshell-info-banner--get-uptime))
          (kernel        (concat (s-trim (shell-command-to-string "uname -s"))
                                 " "
                                 (s-trim (shell-command-to-string "uname -r"))))
