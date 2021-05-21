@@ -455,7 +455,8 @@ thought of as the “percentage of discharge” of the computer.
 Thus, setting the warning at 75% will be translated as showing
 the warning face with a battery level of 25% or less."
   (let ((battery-level (battery)))
-    (if (string= battery-level "Battery status not available")
+    (if (or (string= battery-level "Battery status not available")
+            (string-match-p (regexp-quote "N/A") battery-level))
         ""
       (let ((percentage (save-match-data
                           (string-match "\\([0-9]+\\)\\(\\.[0-9]\\)?%" battery-level)
