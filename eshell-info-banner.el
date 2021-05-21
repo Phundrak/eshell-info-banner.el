@@ -434,7 +434,7 @@ the warning face with a battery level of 25% or less."
     (if (string= battery-level "Battery status not available")
         ""
       (let ((percentage (save-match-data
-                          (string-match "\\([0-9]+\\)\\.[0-9]+%" battery-level)
+                          (string-match "\\([0-9]+\\)\\(\\.[0-9]\\)?%" battery-level)
                           (string-to-number (substring battery-level (match-beginning 1) (match-end 1))))))
         (concat (s-pad-right text-padding "." "Battery")
                 ": "
