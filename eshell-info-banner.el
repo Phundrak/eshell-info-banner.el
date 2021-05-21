@@ -542,9 +542,7 @@ If RELEASE-FILE is nil, use '/etc/os-release'."
                             (or (file-remote-p default-directory 'host) (system-name))
                           (system-name)))
          (uptime        (eshell-info-banner--get-uptime))
-         (kernel        (concat (s-trim (shell-command-to-string "uname -s"))
-                                " "
-                                (s-trim (shell-command-to-string "uname -r"))))
+         (kernel        (s-trim (shell-command-to-string "uname -sr")))
          (partitions    (eshell-info-banner--get-mounted-partitions))
          (left-padding  (eshell-info-banner--get-longest-path partitions))
          (left-text     (max (length os)
