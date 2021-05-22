@@ -2,7 +2,7 @@
 
 ;; Author: Lucien Cartier-Tilet <lucien@phundrak.com>
 ;; Maintainer: Lucien Cartier-Tilet <lucien@phundrak.com>
-;; Version: 0.4.3
+;; Version: 0.4.4
 ;; Package-Requires: ((emacs "24") (dash "2") (f "0.20") (s "1"))
 ;; Homepage: https://labs.phundrak.com/phundrak/eshell-info-banner.el
 
@@ -174,7 +174,7 @@ If the executable `uptime' is not found, return nil."
                            (string-match-p keyword uptime-str))
                          '("invalid" "illegal")))
           (s-chop-prefix "up " (s-trim uptime-str))
-        (let ((uptime-str (shell-command-to-string "uptime")))
+        (let ((uptime-str (shell-command-to-string "LANG=C uptime")))
           (save-match-data
             (string-match "[^,]+up *\\([^,]+\\)," uptime-str)
             (s-trim (substring-no-properties uptime-str
@@ -342,7 +342,7 @@ For TEXT-PADDING and BAR-LENGTH, see the documentation of
 
 
                                         ; Memory ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun eshell-info-banner--get-memory/linux ()
+(defun eshell-info-banner--get-memory/gnu ()
   "Get memory usage for GNU/Linux and Hurd."
   (-map (lambda (line)
           (let* ((line (split-string line " " t)))
@@ -360,7 +360,7 @@ For TEXT-PADDING and BAR-LENGTH, see the documentation of
 
 (defun eshell-info-banner--get-memory/darwin ()
   "Get memory usage for macOS."
-  (let* ((mem (s-lines (shell-command-to-string "vm_stat")))
+  (let* ((mem (s-lines (shell-command-to-string "LANG=C vm_stat")))
          (mem (cl-remove-if-not (lambda (line)
                                   (string-match-p "^Pages \\(free\\|active\\|inactive\\|speculative\\|wired\\)"
                                                   line))
@@ -401,7 +401,7 @@ total amount of memory available, and the amount of used memory,
 in bytes."
   (pcase system-type
     ((or 'gnu 'gnu/linux)
-     (eshell-info-banner--get-memory/linux))
+     (eshell-info-banner--get-memory/gnu))
     ('gnu/kfreebsd
      (eshell-info-banner--get-memory/bsd))
     ('darwin
