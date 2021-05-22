@@ -60,6 +60,22 @@
 
 (defconst eshell-info-banner--min-length-left 8
   "Minimum length of text on the left hand side of the banner.")
+(defconst eshell-info-banner--macos-versions
+  '(("10.4"  . "Mac OS X Tiger")
+    ("10.5"  . "Mac OS X Leopard")
+    ("10.6"  . "Mac OS X Snow Leopard")
+    ("10.7"  . "Mac OS X Lion")
+    ("10.8"  . "OS X Mountain Lion")
+    ("10.9"  . "OS X Mavericks")
+    ("10.10" . "OS X Yosemite")
+    ("10.11" . "OS X El Capitan")
+    ("10.12" . "macOS Sierra")
+    ("10.13" . "macOS High Sierra")
+    ("10.14" . "macOS Mojave")
+    ("10.15" . "macOS Catalina")
+    ("10.16" . "macOS Big Sur")
+    ("11.0"  . "macOS Big Sur"))
+  "Versions of OSX and macOS and their name.")
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -512,41 +528,68 @@ If RELEASE-FILE is nil, use '/etc/os-release'."
          ((string= "BuildLab" (match-string 1)) (setq win32-build (match-string 3)))))
       (format "%s (%s)" win32-name win32-build))))
 
-(defun eshell-info-banner--get-os-information ()
-  "Get operating system identifying information."
-  (let ((prefix (if eshell-info-banner-tramp-aware (file-remote-p default-directory) "")))
+(defun eshell-info-banner--get-os-information/windows ()
+  "See `eshell-info-banner--get-os-information'."
+  (let ((os (eshell-info-banner--get-os-information-from-registry)))
+    (save-match-data
+      (string-match "\\([^()]+\\) *(\\([^()]+\\))" os)
+      `(,(s-trim (substring-no-properties os
+                                          (match-beginning 1)
+                                          (match-end 1)))
+        .
+        ,(substring-no-properties os
+                                  (match-beginning 2)
+                                  (match-end 2))))))
 
-    (pcase system-type
-      ((or 'ms-dos 'windows-nt 'cygwin)
-       (let ((os (eshell-info-banner--get-os-information-from-registry)))
+(defun eshell-info-banner--get-os-information/gnu ()
+  "See `eshell-info-banner--get-os-information'."
+  (let ((prefix (if eshell-info-banner-tramp-aware (file-remote-p default-directory) "")))
+    `(,(cond
+      ((executable-find "hostnamectl" eshell-info-banner-tramp-aware)
+       (eshell-info-banner--get-os-information-from-hostnamectl))
+      ((executable-find "lsb_release" eshell-info-banner-tramp-aware)
+       (eshell-info-banner--get-os-information-from-lsb-release))
+      ((file-exists-p (concat prefix "/etc/os-release"))
+       (eshell-info-banner--get-os-information-from-release-file))
+      ((executable-find "shepherd")
+       (let ((distro (car (s-lines (shell-command-to-string "guix -V")))))
          (save-match-data
-           (string-match "\\([^()]+\\) *(\\([^()]+\\))" os)
-           `(,(s-trim (substring-no-properties os
-                                               (match-beginning 1)
-                                               (match-end 1)))
-             .
-             ,(substring-no-properties os
-                                       (match-beginning 2)
-                                       (match-end 2))))))
-      ((or 'gnu 'gnu/linux 'gnu/kfreebsd 'darwin)
-       `(,(cond
-           ((executable-find "hostnamectl" eshell-info-banner-tramp-aware)
-            (eshell-info-banner--get-os-information-from-hostnamectl))
-           ((executable-find "lsb_release" eshell-info-banner-tramp-aware)
-            (eshell-info-banner--get-os-information-from-lsb-release))
-           ((file-exists-p (concat prefix "/etc/os-release"))
-            (eshell-info-banner--get-os-information-from-release-file))
-           ((executable-find "shepherd")
-            (let ((distro (car (s-lines (shell-command-to-string "guix -V")))))
-              (save-match-data
-                (string-match "\\([0-9\\.]+\\)" distro)
-                (concat "Guix System "
-                        (substring-no-properties distro
-                                                 (match-beginning 1)
-                                                 (match-end 1))))))
-           (t "Unknown"))
-         .
-         ,(s-trim (shell-command-to-string "uname -rs")))))))
+           (string-match "\\([0-9\\.]+\\)" distro)
+           (concat "Guix System "
+                   (substring-no-properties distro
+                                            (match-beginning 1)
+                                            (match-end 1))))))
+      (t "Unknown"))
+    .
+    ,(s-trim (shell-command-to-string "uname -rs")))))
+
+(defmacro eshell-info-banner--get-macos-name (version)
+  "Get the name of the current macOS or OSX system based on its VERSION."
+  `(cond
+    ,@(mapcar (lambda (major)
+               `((string-match-p (regexp-quote ,(car major))
+                                 ,version)
+                 ,(cdr major)))
+             eshell-info-banner--macos-versions)))
+
+(defun eshell-info-banner--get-os-information/darwin ()
+  "See `eshell-info-banner--get-os-information'."
+  `(,(eshell-info-banner--get-macos-name (s-trim (shell-command-to-string "sw_vers -productVersion")))
+    .
+    ,(s-trim (shell-command-to-string "uname -rs"))))
+
+(defun eshell-info-banner--get-os-information ()
+  "Get operating system identifying information.
+Return a pair containing first the name of the operating system
+and second its kernel name and version (or in Windows’ case its
+build number)."
+  (pcase system-type
+    ((or 'ms-dos 'windows-nt 'cygwin)
+     (eshell-info-banner--get-os-information/windows))
+    ((or 'gnu 'gnu/linux 'gnu/kfreebsd)
+     (eshell-info-banner--get-os-information/gnu))
+    ('darwin
+     (eshell-info-banner--get-os-information/darwin))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
