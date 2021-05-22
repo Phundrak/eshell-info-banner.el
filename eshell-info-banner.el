@@ -2,7 +2,7 @@
 
 ;; Author: Lucien Cartier-Tilet <lucien@phundrak.com>
 ;; Maintainer: Lucien Cartier-Tilet <lucien@phundrak.com>
-;; Version: 0.4.2
+;; Version: 0.4.3
 ;; Package-Requires: ((emacs "24") (dash "2") (f "0.20") (s "1"))
 ;; Homepage: https://labs.phundrak.com/phundrak/eshell-info-banner.el
 
@@ -359,9 +359,32 @@ For TEXT-PADDING and BAR-LENGTH, see the documentation of
   nil)
 
 (defun eshell-info-banner--get-memory/darwin ()
-  "Get memory usage for macOS and Darwin-based OSes."
-  (message "Memory usage not yet implemented for macOS and Darwin-based OSes")
-  nil)
+  "Get memory usage for macOS."
+  (let* ((mem (s-lines (shell-command-to-string "vm_stat")))
+         (mem (cl-remove-if-not (lambda (line)
+                                  (string-match-p "^Pages \\(free\\|active\\|inactive\\|speculative\\|wired\\)"
+                                                  line))
+                                mem))
+         (mem (mapcar (lambda (line)
+                        (save-match-data
+                          (string-match "^Pages \\([[:alpha:] ]+\\): *\\([[:digit:]]+\\)\\." line)
+                          `(,(substring-no-properties line
+                                                      (match-beginning 1)
+                                                      (match-end 1))
+                            .
+                            ,(string-to-number (substring-no-properties line
+                                                                        (match-beginning 2)
+                                                                        (match-end 2))))))
+                      mem))
+         (total (cl-reduce (lambda (acc val)
+                             (+ acc (cdr val)))
+                           mem
+                           :initial-value 0))
+         (used (+ (cdr (assoc "active" mem))
+                  (cdr (assoc "wired down" mem)))))
+    `(("RAM"
+       ,(* 4096 total)
+       ,(* 4096 used)))))
 
 (defun eshell-info-banner--get-memory/windows ()
   "Get memory usage for Window."
