@@ -235,7 +235,7 @@ neither of these, an error will be thrown by the function."
 
 Return detected partitions as a list of structs.  See
 `eshell-info-banner-partition-prefixes' to see how partitions are
-chosen."
+chosen.  Relies on the `df' command."
   (let ((partitions (split-string (shell-command-to-string "LANG=C df -lH") (regexp-quote "\n") t)))
     (-keep (lambda (partition)
              (let* ((partition  (split-string partition " " t))
@@ -272,10 +272,27 @@ chosen."
 
 Return detected partitions as a list of structs.  See
 `eshell-info-banner-partition-prefixes' to see how partitions are
-chosen."
-  (progn
-    (message "Partition detection for macOS and Darwin-based OSes not yet supported.")
-    nil))
+chosen.  Relies on the `df' command."
+  (let ((partitions (split-string (shell-command-to-string "LANG=C df -lH") (regexp-quote "\n") t)))
+    (-keep (lambda (partition)
+             (let* ((partition  (split-string partition " " t))
+                    (filesystem (nth 0 partition))
+                    (size       (nth 1 partition))
+                    (used       (nth 2 partition))
+                    (percent    (nth 4 partition))
+                    (mount      (nth 8 partition)))
+               (when (seq-some (lambda (prefix)
+                                 (string-prefix-p prefix filesystem t))
+                               eshell-info-banner-partition-prefixes)
+                 (make-eshell-info-banner--mounted-partitions
+                  :path (if (> (length mount) eshell-info-banner-shorten-path-from)
+                            (eshell-info-banner--abbr-path mount t)
+                          mount)
+                  :size size
+                  :used used
+                  :percent (string-to-number
+                            (string-trim-left percent (regexp-quote "%")))))))
+           partitions)))
 
 (defun eshell-info-banner--get-mounted-partitions ()
   "Detect mounted partitions on the system.
