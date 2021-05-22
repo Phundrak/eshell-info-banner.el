@@ -2,7 +2,7 @@
 
 ;; Author: Lucien Cartier-Tilet <lucien@phundrak.com>
 ;; Maintainer: Lucien Cartier-Tilet <lucien@phundrak.com>
-;; Version: 0.4.1
+;; Version: 0.4.2
 ;; Package-Requires: ((emacs "24") (dash "2") (f "0.20") (s "1"))
 ;; Homepage: https://labs.phundrak.com/phundrak/eshell-info-banner.el
 
@@ -429,12 +429,13 @@ TYPE......: [=========] XXG / XXG  (XX%)
 progress bar.
 
 `BAR-LENGTH': the length of the progress bar."
-  (mapconcat (lambda (mem)
-               (eshell-info-banner--memory-to-string (nth 0 mem) (nth 1 mem)
-                                                     (nth 2 mem) text-padding
-                                                     bar-length))
-             (eshell-info-banner--get-memory)
-             "\n"))
+  (concat (mapconcat (lambda (mem)
+                       (eshell-info-banner--memory-to-string (nth 0 mem) (nth 1 mem)
+                                                             (nth 2 mem) text-padding
+                                                             bar-length))
+                     (eshell-info-banner--get-memory)
+                     "\n")
+          "\n"))
 
 
                                         ; Display information ;;;;;;;;;;;;;;;;;
@@ -652,7 +653,6 @@ build number)."
                     uptime)
             (eshell-info-banner--display-battery left-padding bar-length)
             (eshell-info-banner--display-memory left-padding bar-length)
-            "\n"
             (eshell-info-banner--display-partitions left-padding bar-length)
             (format "\n%s\n" (s-repeat tot-width eshell-info-banner-progress-bar-char)))))
 
