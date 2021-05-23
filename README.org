@@ -16,6 +16,14 @@ This package is geared towards Linux in particular, I am pretty sure
 it will not work on Windows, and there will probably be bugs on
 macOS. PR are welcome if you want to fix that!
 
+* Table of Contents                                                :TOC_2_gh:
+- [[#introduction][Introduction]]
+- [[#installation][Installation]]
+- [[#customizing][Customizing]]
+- [[#my-computer-doesnt-have-a-battery-will-this-still-work][My computer doesn’t have a battery, will this still work?]]
+- [[#contributing][Contributing]]
+- [[#license][License]]
+
 * Installation
 A couple of options are available for installing
 ~eshell-info-banner.el~. The first one is to clone the repository in
@@ -112,17 +120,8 @@ detect whether you have a battery or not/ and will only display this
 line if you have one. If you don’t have a battery, the only difference
 is you will have one less line than laptop users.
 
-* Upcoming changes
-Here are some upcoming changes I hope I’ll make in the future. If you
-see a feature still hasn’t been implemented and you wish to implement
-it, don’t hesitate to contribute and submit a PR!
-
-** Better support for other OSes
-Displaying the OS name only works on Linux systems that have an
-~/etc/os-release~ file and ~df~ available in Eshell’s path, or on Windows
-at least partially —i.e. it will probably not work correctly on macOS
-and on exotic Linux distributions. This should be fixed someday. (And
-*BSD maybe?) See [[https://github.com/Phundrak/eshell-info-banner.el/issues/4][this issue]].
+* Contributing
+See [[file:CONTRIBUTING.org]].
 
 * License
 ~eshell-info-banner.el~ is available under the GNU GPL-3.0 license. You
