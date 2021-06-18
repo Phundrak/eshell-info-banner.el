@@ -21,6 +21,7 @@ macOS. PR are welcome if you want to fix that!
 - [[#installation][Installation]]
 - [[#customizing][Customizing]]
 - [[#my-computer-doesnt-have-a-battery-will-this-still-work][My computer doesn’t have a battery, will this still work?]]
+- [[#advice-for-windows-users][Advice for Windows users]]
 - [[#contributing][Contributing]]
 - [[#license][License]]
 
@@ -100,9 +101,7 @@ A couple of variables can be edited by the user in order to configure
   better replacement for ~df~ and should be more platform-agnostic than
   the latter. I also suspect this implementation will be faster than
   the one with ~df~, since there is very few string manipulation with
-  ~duf~ compared to the implementations with ~df~. However, due to
-  ~shell-command-to-string~, Windows users might want to turn it off by
-  default.
+  ~duf~ compared to the implementations with ~df~.
 
   Default value: ~t~ if ~duf~ is found on the system, ~nil~ otherwise
 - ~eshell-info-banner-duf-executable~ :: Path to your ~duf~ executable. If
@@ -134,6 +133,12 @@ not have a battery, so… what do? Don’t worry, /Emacs will automatically
 detect whether you have a battery or not/ and will only display this
 line if you have one. If you don’t have a battery, the only difference
 is you will have one less line than laptop users.
+
+* Advice for Windows users
+Currently, the partitions detection is done only with the ~duf~
+command-line utility. If you want a list of your partitions, I
+strongly encourage you to install it on your system. See
+[[https://github.com/muesli/duf#windows]].
 
 * Contributing
 See [[file:CONTRIBUTING.org]].

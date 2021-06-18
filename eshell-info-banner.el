@@ -256,11 +256,10 @@ neither of these, an error will be thrown by the function."
 
 Return detected partitions as a list of structs. See
 `eshell-info-banner-partition-prefixes' to see how partitions are
-chosen. Relies on the `duf' command.
-
-FIXME: filter first partitions, then get other information."
-    (let* ((partitions (json-read-from-string (shell-command-to-string (concat eshell-info-banner-duf-executable
-                                                                               " -json"))))
+chosen. Relies on the `duf' command."
+    (let* ((partitions (json-read-from-string (with-temp-buffer
+                                                (call-process "duf" nil t nil "-json")
+                                                (buffer-string))))
            (partitions (cl-remove-if-not (lambda (partition)
                                            (let ((device (format "%s" (cdr (assoc 'device partition)))))
                                              (seq-some (lambda (prefix)
