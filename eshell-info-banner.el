@@ -86,42 +86,49 @@
   "Make `eshell-info-banner' TRAMP aware."
   :group 'eshell-info-banner
   :type 'boolean
-  :safe #'booleanp)
+  :safe #'booleanp
+  :version "0.3.0")
 
 (defcustom eshell-info-banner-shorten-path-from 7
   "From which length should a path be shortened?"
   :group 'eshell-info-banner
   :type 'integer
-  :safe #'integer-or-marker-p)
+  :safe #'integer-or-marker-p
+  :version "0.1.0")
 
 (defcustom eshell-info-banner-width 80
   "Width of the info banner to be shown in Eshell."
   :group 'eshell-info-banner
   :type 'integer
-  :safe #'integer-or-marker-p)
+  :safe #'integer-or-marker-p
+  :version "0.1.0")
 
 (defcustom eshell-info-banner-progress-bar-char "="
   "Character to fill the progress bars with."
   :group 'eshell-info-banner
   :type 'string
-  :safe #'stringp)
+  :safe #'stringp
+  :version "0.1.0")
 
 (defcustom eshell-info-banner-warning-percentage 75
   "When to warn about a percentage."
   :group 'eshell-info-banner
   :type 'float
-  :safe #'floatp)
+  :safe #'floatp
+  :version "0.1.0")
 
 (defcustom eshell-info-banner-critical-percentage 90
   "When a percentage becomes critical."
   :group 'eshell-info-banner
   :type 'float
-  :safe #'floatp)
+  :safe #'floatp
+  :version "0.1.0")
 
 (defcustom eshell-info-banner-partition-prefixes '("/dev")
   "List of prefixes for detecting which partitions to display."
   :group 'eshell-info-banner
-  :type 'list)
+  :type 'list
+  :version "0.3.0")
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -181,8 +188,6 @@ If the executable `uptime' is not found, return nil."
                                              (match-beginning 1)
                                              (match-end 1)))))))))
 
-(eshell-info-banner--get-uptime)
-
                                         ; Partitions ;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (cl-defstruct eshell-info-banner--mounted-partitions
@@ -210,7 +215,7 @@ include it before the abbreviated name of the directory,
 e.g. \".config\" -> \".c\".
 
 For public use, `PATH' should be a string representing a UNIX
-path.  For internal use, `PATH' cna also be a list. If `PATH' is
+path.  For internal use, `PATH' can also be a list. If `PATH' is
 neither of these, an error will be thrown by the function."
   (cond
    ((stringp path) (abbreviate-file-name
