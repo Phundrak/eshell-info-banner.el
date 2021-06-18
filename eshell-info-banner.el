@@ -483,7 +483,7 @@ displayed."
     (concat (s-pad-right text-padding "." type)
             ": "
             (eshell-info-banner--progress-bar bar-length percentage)
-            (format " %6s / %-6s (%3s%%)"
+            (format " %6s / %-6s (%3s%%)\n"
                     (file-size-human-readable used)
                     (file-size-human-readable total)
                     (eshell-info-banner--with-face
@@ -504,13 +504,12 @@ TYPE......: [=========] XXG / XXG  (XX%)
 progress bar.
 
 `BAR-LENGTH': the length of the progress bar."
-  (concat (mapconcat (lambda (mem)
-                       (eshell-info-banner--memory-to-string (nth 0 mem) (nth 1 mem)
-                                                             (nth 2 mem) text-padding
-                                                             bar-length))
-                     (eshell-info-banner--get-memory)
-                     "\n")
-          "\n"))
+  (mapconcat (lambda (mem)
+               (eshell-info-banner--memory-to-string (nth 0 mem) (nth 1 mem)
+                                                     (nth 2 mem) text-padding
+                                                     bar-length))
+             (eshell-info-banner--get-memory)
+             ""))
 
 
                                         ; Display information ;;;;;;;;;;;;;;;;;
