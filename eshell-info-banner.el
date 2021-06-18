@@ -2,7 +2,7 @@
 
 ;; Author: Lucien Cartier-Tilet <lucien@phundrak.com>
 ;; Maintainer: Lucien Cartier-Tilet <lucien@phundrak.com>
-;; Version: 0.4.4
+;; Version: 0.5.0
 ;; Package-Requires: ((emacs "25") (dash "2") (f "0.20") (s "1"))
 ;; Homepage: https://labs.phundrak.com/phundrak/eshell-info-banner.el
 
@@ -130,6 +130,22 @@
   :type 'list
   :version "0.3.0")
 
+(defcustom eshell-info-banner-duf-executable "duf"
+  "Path to the `duf' executable."
+  :group 'eshell-info-banner
+  :type 'string
+  :safe #'stringp
+  :version "0.5.0")
+
+(defcustom eshell-info-banner-use-duf (if (executable-find eshell-info-banner-duf-executable)
+                                          t
+                                        nil)
+  "If non-nil, use `duf' instead of `df'."
+  :group 'eshell-info-banner
+  :type 'boolean
+  :safe #'booleanp
+  :version "0.5.0")
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
                                         ;                Faces                ;
@@ -235,6 +251,36 @@ neither of these, an error will be thrown by the function."
             (eshell-info-banner--abbr-path (cdr path))))
    (t (error "Invalid argument %s, neither stringp or listp" path))))
 
+(defun eshell-info-banner--get-mounted-partitions/duf ()
+    "Detect mounted partitions on systems supporting `duf'.
+
+Return detected partitions as a list of structs. See
+`eshell-info-banner-partition-prefixes' to see how partitions are
+chosen. Relies on the `duf' command.
+
+FIXME: filter first partitions, then get other information."
+    (let* ((partitions (json-read-from-string (shell-command-to-string (concat eshell-info-banner-duf-executable
+                                                                               " -json"))))
+           (partitions (cl-remove-if-not (lambda (partition)
+                                           (let ((device (format "%s" (cdr (assoc 'device partition)))))
+                                             (seq-some (lambda (prefix)
+                                                         (string-prefix-p prefix device t))
+                                                       eshell-info-banner-partition-prefixes)))
+                                         (seq-into-sequence partitions))))
+      (mapcar (lambda (partition)
+                (let* ((mount-point (format "%s" (cdr (assoc 'mount_point partition))))
+                       (total       (cdr (assoc 'total partition)))
+                       (used        (cdr (assoc 'used  partition)))
+                       (percent     (/ (* 100 used) total)))
+                  (make-eshell-info-banner--mounted-partitions
+                   :path    (if (> (length mount-point) eshell-info-banner-shorten-path-from)
+                                (eshell-info-banner--abbr-path mount-point t)
+                              mount-point)
+                   :size    (file-size-human-readable total)
+                   :used    (file-size-human-readable used)
+                   :percent percent)))
+              partitions)))
+
 (defun eshell-info-banner--get-mounted-partitions/gnu ()
   "Detect mounted partitions on a Linux system.
 
@@ -303,17 +349,19 @@ chosen.  Relies on the `df' command."
   "Detect mounted partitions on the system.
 
 Return detected partitions as a list of structs."
-  (pcase system-type
-    ((or 'gnu 'gnu/linux 'gnu/kfreebsd)
-     (eshell-info-banner--get-mounted-partitions/gnu))
-    ((or 'ms-dos 'windows-nt 'cygwin)
-     (eshell-info-banner--get-mounted-partitions/windows))
-    ('darwin
-     (eshell-info-banner--get-mounted-partitions/darwin))
-    (other
-     (progn
-       (message "Partition detection for %s not yet supported." other)
-       nil))))
+  (if eshell-info-banner-use-duf
+      (eshell-info-banner--get-mounted-partitions/duf)
+    (pcase system-type
+       ((or 'gnu 'gnu/linux 'gnu/kfreebsd)
+        (eshell-info-banner--get-mounted-partitions/gnu))
+       ((or 'ms-dos 'windows-nt 'cygwin)
+        (eshell-info-banner--get-mounted-partitions/windows))
+       ('darwin
+        (eshell-info-banner--get-mounted-partitions/darwin))
+       (other
+        (progn
+         (message "Partition detection for %s not yet supported." other)
+         nil)))))
 
 (defun eshell-info-banner--partition-to-string (partition text-padding bar-length)
   "Display a progress bar showing how full a `PARTITION' is.
@@ -328,7 +376,7 @@ For TEXT-PADDING and BAR-LENGTH, see the documentation of
                           :weight 'bold))
             ": "
             (eshell-info-banner--progress-bar bar-length percentage)
-            (format " %6s / %-5s (%3s%%)"
+            (format " %6s / %-6s (%3s%%)"
                     (eshell-info-banner--mounted-partitions-used partition)
                     (eshell-info-banner--mounted-partitions-size partition)
                     (eshell-info-banner--with-face
@@ -436,7 +484,7 @@ displayed."
     (concat (s-pad-right text-padding "." type)
             ": "
             (eshell-info-banner--progress-bar bar-length percentage)
-            (format " %6s / %-5s (%3s%%)"
+            (format " %6s / %-6s (%3s%%)"
                     (file-size-human-readable used)
                     (file-size-human-readable total)
                     (eshell-info-banner--with-face
@@ -532,7 +580,7 @@ the warning face with a battery level of 25% or less."
                 (eshell-info-banner--progress-bar bar-length
                                                   percentage
                                                   t)
-                (s-repeat 16 " ")
+                (s-repeat 17 " ")
                 (format "(%3s%%)\n"
                         (eshell-info-banner--with-face
                          (number-to-string percentage)
@@ -593,23 +641,23 @@ If RELEASE-FILE is nil, use '/etc/os-release'."
   "See `eshell-info-banner--get-os-information'."
   (let ((prefix (if eshell-info-banner-tramp-aware (file-remote-p default-directory) "")))
     `(,(cond
-      ((executable-find "hostnamectl" eshell-info-banner-tramp-aware)
-       (eshell-info-banner--get-os-information-from-hostnamectl))
-      ((executable-find "lsb_release" eshell-info-banner-tramp-aware)
-       (eshell-info-banner--get-os-information-from-lsb-release))
-      ((file-exists-p (concat prefix "/etc/os-release"))
-       (eshell-info-banner--get-os-information-from-release-file))
-      ((executable-find "shepherd")
-       (let ((distro (car (s-lines (shell-command-to-string "guix -V")))))
-         (save-match-data
-           (string-match "\\([0-9\\.]+\\)" distro)
-           (concat "Guix System "
-                   (substring-no-properties distro
-                                            (match-beginning 1)
-                                            (match-end 1))))))
-      (t "Unknown"))
-    .
-    ,(s-trim (shell-command-to-string "uname -rs")))))
+        ((executable-find "hostnamectl" eshell-info-banner-tramp-aware)
+         (eshell-info-banner--get-os-information-from-hostnamectl))
+        ((executable-find "lsb_release" eshell-info-banner-tramp-aware)
+         (eshell-info-banner--get-os-information-from-lsb-release))
+        ((file-exists-p (concat prefix "/etc/os-release"))
+         (eshell-info-banner--get-os-information-from-release-file))
+        ((executable-find "shepherd")
+         (let ((distro (car (s-lines (shell-command-to-string "guix -V")))))
+           (save-match-data
+             (string-match "\\([0-9\\.]+\\)" distro)
+             (concat "Guix System "
+                     (substring-no-properties distro
+                                              (match-beginning 1)
+                                              (match-end 1))))))
+        (t "Unknown"))
+      .
+      ,(s-trim (shell-command-to-string "uname -rs")))))
 
 (defmacro eshell-info-banner--get-macos-name (version)
   "Get the name of the current macOS or OSX system based on its VERSION."
@@ -667,7 +715,7 @@ build number)."
                              eshell-info-banner-width))
          (middle-padding (- tot-width right-text left-padding 4))
 
-         (bar-length    (- tot-width left-padding 4 22)))
+         (bar-length    (- tot-width left-padding 4 23)))
     (concat (format "%s\n" (s-repeat tot-width eshell-info-banner-progress-bar-char))
             (format "%s: %s Kernel.: %s\n"
                     (s-pad-right left-padding

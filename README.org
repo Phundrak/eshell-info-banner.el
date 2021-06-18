@@ -87,7 +87,7 @@ A couple of variables can be edited by the user in order to configure
 - ~eshell-info-banner-critical-percentage~ :: Percentage from which the
   level should be displayed as critical.
 
-  Default value ~90~
+  Default value: ~90~
 - ~eshell-info-banner-tramp-aware~ :: When using Eshell through TRAMP,
   you can decide whether ~eshell-info-banner~ will display information
   about the remote system you are connected to or only display
@@ -95,7 +95,22 @@ A couple of variables can be edited by the user in order to configure
   ~eshell-info-banner-tramp-aware~ to ~t~ to display information on the
   remote system or to ~nil~ to keep local information only.
 
-  Default value ~t~
+  Default value: ~t~
+- ~eshell-info-banner-use-duf~ :: Whether or not to use [[https://github.com/muesli/duf][duf]]. ~duf~ is a
+  better replacement for ~df~ and should be more platform-agnostic than
+  the latter. I also suspect this implementation will be faster than
+  the one with ~df~, since there is very few string manipulation with
+  ~duf~ compared to the implementations with ~df~. However, due to
+  ~shell-command-to-string~, Windows users might want to turn it off by
+  default.
+
+  Default value: ~t~ if ~duf~ is found on the system, ~nil~ otherwise
+- ~eshell-info-banner-duf-executable~ :: Path to your ~duf~ executable. If
+  ~duf~ is not found by default by Emacs, you can override
+  ~eshell-info-banner-use-duf~ with ~t~ and specify the path to ~duf~ with
+  this custom variable.
+
+  Default value: ~duf~
 
 Don’t like the colors used by the package? They should follow by
 default your theme, but you can customize the following faces:
