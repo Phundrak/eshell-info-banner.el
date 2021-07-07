@@ -60,7 +60,7 @@
 
 (defconst eshell-info-banner--min-length-left 8
   "Minimum length of text on the left hand side of the banner.")
-(defconst eshell-info-banner--macos-versions
+(defcustom eshell-info-banner--macos-versions
   '(("10.4"  . "Mac OS X Tiger")
     ("10.5"  . "Mac OS X Leopard")
     ("10.6"  . "Mac OS X Snow Leopard")
@@ -76,7 +76,8 @@
     ("10.16" . "macOS Big Sur")
     ("11.0"  . "macOS Big Sur")
     ("11.4"  . "macOS Big Sur"))
-  "Versions of OSX and macOS and their name.")
+  "Versions of OSX and macOS and their name."
+  :type 'alist)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
