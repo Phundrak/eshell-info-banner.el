@@ -74,7 +74,8 @@
     ("10.14" . "macOS Mojave")
     ("10.15" . "macOS Catalina")
     ("10.16" . "macOS Big Sur")
-    ("11.0"  . "macOS Big Sur"))
+    ("11.0"  . "macOS Big Sur")
+    ("11.4"  . "macOS Big Sur"))
   "Versions of OSX and macOS and their name.")
 
 
