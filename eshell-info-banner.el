@@ -60,25 +60,6 @@
 
 (defconst eshell-info-banner--min-length-left 8
   "Minimum length of text on the left hand side of the banner.")
-(defcustom eshell-info-banner--macos-versions
-  '(("10.4"  . "Mac OS X Tiger")
-    ("10.5"  . "Mac OS X Leopard")
-    ("10.6"  . "Mac OS X Snow Leopard")
-    ("10.7"  . "Mac OS X Lion")
-    ("10.8"  . "OS X Mountain Lion")
-    ("10.9"  . "OS X Mavericks")
-    ("10.10" . "OS X Yosemite")
-    ("10.11" . "OS X El Capitan")
-    ("10.12" . "macOS Sierra")
-    ("10.13" . "macOS High Sierra")
-    ("10.14" . "macOS Mojave")
-    ("10.15" . "macOS Catalina")
-    ("10.16" . "macOS Big Sur")
-    ("11.0"  . "macOS Big Sur")
-    ("11.4"  . "macOS Big Sur"))
-  "Versions of OSX and macOS and their name."
-  :type 'alist)
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
                                         ;           Custom variables          ;
@@ -659,18 +640,9 @@ If RELEASE-FILE is nil, use '/etc/os-release'."
       .
       ,(s-trim (shell-command-to-string "uname -rs")))))
 
-(defmacro eshell-info-banner--get-macos-name (version)
-  "Get the name of the current macOS or OSX system based on its VERSION."
-  `(cond
-    ,@(mapcar (lambda (major)
-               `((string-match-p (regexp-quote ,(car major))
-                                 ,version)
-                 ,(cdr major)))
-             eshell-info-banner--macos-versions)))
-
 (defun eshell-info-banner--get-os-information/darwin ()
   "See `eshell-info-banner--get-os-information'."
-  `(,(eshell-info-banner--get-macos-name (s-trim (shell-command-to-string "sw_vers -productVersion")))
+  `(,(s-trim (replace-regexp-in-string "\\\\" "" (replace-regexp-in-string "f0" "" (shell-command-to-string "sed -nE '/SOFTWARE LICENSE AGREEMENT FOR/s/([A-Za-z]+ ){5}|\\$//gp'  /System/Library/CoreServices/Setup\\ Assistant.app/Contents/Resources/en.lproj/OSXSoftwareLicense.rtf"))))
     .
     ,(s-trim (shell-command-to-string "uname -rs"))))
 
