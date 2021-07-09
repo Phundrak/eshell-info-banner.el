@@ -74,7 +74,11 @@
     ("10.14" . "macOS Mojave")
     ("10.15" . "macOS Catalina")
     ("10.16" . "macOS Big Sur")
-    ("11.0"  . "macOS Big Sur"))
+    ("11.0"  . "macOS Big Sur")
+    ("11.1"  . "macOS Big Sur")
+    ("11.2"  . "macOS Big Sur")
+    ("11.3"  . "macOS Big Sur")
+    ("11.4"  . "macOS Big Sur"))
   "Versions of OSX and macOS and their name.")
 
 
@@ -664,7 +668,8 @@ If RELEASE-FILE is nil, use '/etc/os-release'."
                `((string-match-p (regexp-quote ,(car major))
                                  ,version)
                  ,(cdr major)))
-             eshell-info-banner--macos-versions)))
+              eshell-info-banner--macos-versions)
+    (t "unkown version")))
 
 (defun eshell-info-banner--get-os-information/darwin ()
   "See `eshell-info-banner--get-os-information'."
