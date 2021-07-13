@@ -34,14 +34,24 @@ your ~load-path~ and add the following to your ~.emacs~ or your ~init.el~:
   (add-hook 'eshell-banner-load-hook 'eshell-info-banner-update-banner)
 #+end_src
 
+If you use ~use-package~ only, you can then install it like so:
+#+begin_src emacs-lisp
+  (use-package eshell-info-banner
+    :ensure t
+    :defer t
+    :load-path "~/path/to/where/you/cloned/it/eshell-info-banner.el/"
+    :hook (eshell-banner-load . eshell-info-banner-update-banner))
+#+end_src
+
 In my case, I prefer using ~use-package~ with ~straight~:
 #+begin_src emacs-lisp
-(use-package eshell-info-banner
-  :defer t
-  :straight (eshell-info-banner :type git
-                                :host github
-                                :repo "phundrak/eshell-info-banner.el")
-  :hook (eshell-banner-load . eshell-info-banner-update-banner))
+  (use-package eshell-info-banner
+    :ensure t
+    :defer t
+    :straight (eshell-info-banner :type git
+                                  :host github
+                                  :repo "phundrak/eshell-info-banner.el")
+    :hook (eshell-banner-load . eshell-info-banner-update-banner))
 #+end_src
 
 I personally also added ~:build t~ in the straight recipe to ensure
