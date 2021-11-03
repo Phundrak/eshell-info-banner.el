@@ -2,7 +2,7 @@
 
 ;; Author: Lucien Cartier-Tilet <lucien@phundrak.com>
 ;; Maintainer: Lucien Cartier-Tilet <lucien@phundrak.com>
-;; Version: 0.5.0
+;; Version: 0.6.0
 ;; Package-Requires: ((emacs "25") (dash "2") (f "0.20") (s "1"))
 ;; Homepage: https://labs.phundrak.com/phundrak/eshell-info-banner.el
 
@@ -409,10 +409,16 @@ For TEXT-PADDING and BAR-LENGTH, see the documentation of
                       "\n"
                       t)))
 
-(defun eshell-info-banner--get-memory/bsd ()
-  "Get memory usage for *BSD."
-  (message "Memory usage not yet implemented for BSD")
-  nil)
+(defun eshell-info-banner--get-memory/unix ()
+  "Get memory usage for UNIX systems.
+Compatible with Darwin and FreeBSD at least."
+  (let* ((command-to-mem (lambda (command)
+                           (string-to-number (s-trim (cadr (split-string (shell-command-to-string command) " " t)))))))
+    `(("RAM"
+       ,(apply command-to-mem '("sysctl hw.physmem"))
+       ,(apply command-to-mem '("sysctl hw.usermem"))))))
+
+(defalias 'eshell-info-banner--get-memory/bsd #'eshell-info-banner--get-memory/unix)
 
 (defun eshell-info-banner--get-memory/darwin ()
   "Get memory usage for macOS."
@@ -460,8 +466,8 @@ in bytes."
      (eshell-info-banner--get-memory/gnu))
     ('gnu/kfreebsd
      (eshell-info-banner--get-memory/bsd))
-    ('darwin
-     (eshell-info-banner--get-memory/darwin))
+    ((or 'darwin 'berkeley-unix)
+     (eshell-info-banner--get-memory/unix))
     ((or 'ms-dos 'windows-nt 'cygwin)
      (eshell-info-banner--get-memory/windows))
     (os (warn "Memory usage not yet implemented for %s" os)
@@ -657,6 +663,11 @@ If RELEASE-FILE is nil, use '/etc/os-release'."
                      (substring-no-properties distro
                                               (match-beginning 1)
                                               (match-end 1))))))
+        ((equal system-type 'gnu/kfreebsd)
+         (let* ((default-directory (if eshell-info-banner-tramp-aware default-directory "~")))
+           (s-trim (with-temp-buffer
+                     (process-file "uname" nil t nil "-s")
+                     (buffer-string)))))
         (t "Unknown"))
       .
       ,(s-trim (shell-command-to-string "uname -rs")))))
@@ -685,7 +696,7 @@ build number)."
   (pcase system-type
     ((or 'ms-dos 'windows-nt 'cygwin)
      (eshell-info-banner--get-os-information/windows))
-    ((or 'gnu 'gnu/linux 'gnu/kfreebsd)
+    ((or 'gnu 'gnu/linux 'gnu/kfreebsd 'berkeley-unix)
      (eshell-info-banner--get-os-information/gnu))
     ('darwin
      (eshell-info-banner--get-os-information/darwin))
