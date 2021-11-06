@@ -2,7 +2,7 @@
 
 ;; Author: Lucien Cartier-Tilet <lucien@phundrak.com>
 ;; Maintainer: Lucien Cartier-Tilet <lucien@phundrak.com>
-;; Version: 0.6.0
+;; Version: 0.6.1
 ;; Package-Requires: ((emacs "25") (dash "2") (f "0.20") (s "1"))
 ;; Homepage: https://labs.phundrak.com/phundrak/eshell-info-banner.el
 
@@ -289,20 +289,22 @@ chosen. Relies on the `duf' command."
                    :percent percent)))
               partitions)))
 
-(defun eshell-info-banner--get-mounted-partitions/gnu ()
-  "Detect mounted partitions on a Linux system.
-
-Return detected partitions as a list of structs.  See
-`eshell-info-banner-partition-prefixes' to see how partitions are
-chosen.  Relies on the `df' command."
+(defun eshell-info-banner--get-mounted-partitions/df (mount-position)
+  "Get mounted partitions through df.
+Common function between
+`eshell-info-banner--get-mounted-partitions/gnu' and
+`eshell-info-banner--get-mounted-partitions/darwing' which would
+otherwise differ solely on the position of the mount point in the
+partition list. Its position is given by the argument
+MOUNT-POSITION."
   (let ((partitions (split-string (eshell-info-banner--shell-command-to-string "df -lH") (regexp-quote "\n") t)))
     (-keep (lambda (partition)
              (let* ((partition  (split-string partition " " t))
-                    (filesystem (nth 0 partition))
-                    (size       (nth 1 partition))
-                    (used       (nth 2 partition))
-                    (percent    (nth 4 partition))
-                    (mount      (nth 5 partition)))
+                    (filesystem (nth 0              partition))
+                    (size       (nth 1              partition))
+                    (used       (nth 2              partition))
+                    (percent    (nth 4              partition))
+                    (mount      (nth mount-position partition)))
                (when (seq-some (lambda (prefix)
                                  (string-prefix-p prefix filesystem t))
                                eshell-info-banner-partition-prefixes)
@@ -315,6 +317,14 @@ chosen.  Relies on the `df' command."
                   :percent (string-to-number
                             (string-trim-left percent (regexp-quote "%")))))))
            partitions)))
+
+(defun eshell-info-banner--get-mounted-partitions/gnu ()
+  "Detect mounted partitions on a Linux system.
+
+Return detected partitions as a list of structs.  See
+`eshell-info-banner-partition-prefixes' to see how partitions are
+chosen.  Relies on the `df' command."
+  (eshell-info-banner--get-mounted-partitions/df 5))
 
 (defun eshell-info-banner--get-mounted-partitions/windows ()
   "Detect mounted partitions on a Windows system.
@@ -332,26 +342,7 @@ chosen."
 Return detected partitions as a list of structs.  See
 `eshell-info-banner-partition-prefixes' to see how partitions are
 chosen.  Relies on the `df' command."
-  (let ((partitions (split-string (eshell-info-banner--shell-command-to-string "df -lH") (regexp-quote "\n") t)))
-    (-keep (lambda (partition)
-             (let* ((partition  (split-string partition " " t))
-                    (filesystem (nth 0 partition))
-                    (size       (nth 1 partition))
-                    (used       (nth 2 partition))
-                    (percent    (nth 4 partition))
-                    (mount      (nth 8 partition)))
-               (when (seq-some (lambda (prefix)
-                                 (string-prefix-p prefix filesystem t))
-                               eshell-info-banner-partition-prefixes)
-                 (make-eshell-info-banner--mounted-partitions
-                  :path (if (> (length mount) eshell-info-banner-shorten-path-from)
-                            (eshell-info-banner--abbr-path mount t)
-                          mount)
-                  :size size
-                  :used used
-                  :percent (string-to-number
-                            (string-trim-left percent (regexp-quote "%")))))))
-           partitions)))
+  (eshell-info-banner--get-mounted-partitions/df 8))
 
 (defun eshell-info-banner--get-mounted-partitions ()
   "Detect mounted partitions on the system.
