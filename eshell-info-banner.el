@@ -184,6 +184,11 @@
   "Helper macro for applying face `PROPERTIES' to `STR'."
   `(propertize ,str 'face (list ,@properties)))
 
+(defun eshell-info-banner--shell-command-to-string (command)
+  "Execute shell command COMMAND and return its output as a string.
+Ensures the command is ran with LANG=C."
+  (shell-command-to-string (format "LANG=C %s" command)))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
                                         ;          Internal functions         ;
@@ -196,12 +201,12 @@
 
 If the executable `uptime' is not found, return nil."
   (when (executable-find "uptime")
-    (let ((uptime-str (shell-command-to-string "uptime -p")))
+    (let ((uptime-str (eshell-info-banner--shell-command-to-string "uptime -p")))
       (if (not (seq-some (lambda (keyword)
                            (string-match-p keyword uptime-str))
                          '("invalid" "illegal")))
           (s-chop-prefix "up " (s-trim uptime-str))
-        (let ((uptime-str (shell-command-to-string "LANG=C uptime")))
+        (let ((uptime-str (eshell-info-banner--shell-command-to-string "uptime")))
           (save-match-data
             (string-match "[^,]+up *\\([^,]+\\)," uptime-str)
             (s-trim (substring-no-properties uptime-str
@@ -290,7 +295,7 @@ chosen. Relies on the `duf' command."
 Return detected partitions as a list of structs.  See
 `eshell-info-banner-partition-prefixes' to see how partitions are
 chosen.  Relies on the `df' command."
-  (let ((partitions (split-string (shell-command-to-string "LANG=C df -lH") (regexp-quote "\n") t)))
+  (let ((partitions (split-string (eshell-info-banner--shell-command-to-string "df -lH") (regexp-quote "\n") t)))
     (-keep (lambda (partition)
              (let* ((partition  (split-string partition " " t))
                     (filesystem (nth 0 partition))
@@ -327,7 +332,7 @@ chosen."
 Return detected partitions as a list of structs.  See
 `eshell-info-banner-partition-prefixes' to see how partitions are
 chosen.  Relies on the `df' command."
-  (let ((partitions (split-string (shell-command-to-string "LANG=C df -lH") (regexp-quote "\n") t)))
+  (let ((partitions (split-string (eshell-info-banner--shell-command-to-string "df -lH") (regexp-quote "\n") t)))
     (-keep (lambda (partition)
              (let* ((partition  (split-string partition " " t))
                     (filesystem (nth 0 partition))
@@ -355,7 +360,7 @@ Return detected partitions as a list of structs."
   (if eshell-info-banner-use-duf
       (eshell-info-banner--get-mounted-partitions/duf)
     (pcase system-type
-       ((or 'gnu 'gnu/linux 'gnu/kfreebsd)
+       ((or 'gnu 'gnu/linux 'gnu/kfreebsd 'berkeley-unix)
         (eshell-info-banner--get-mounted-partitions/gnu))
        ((or 'ms-dos 'windows-nt 'cygwin)
         (eshell-info-banner--get-mounted-partitions/windows))
@@ -405,7 +410,7 @@ For TEXT-PADDING and BAR-LENGTH, see the documentation of
             (list (s-chop-suffix ":" (nth 0 line))   ; name
                   (string-to-number (nth 1 line))    ; total
                   (string-to-number (nth 2 line))))) ; used
-        (split-string (shell-command-to-string "LANG=C free -b | tail -2")
+        (split-string (eshell-info-banner--shell-command-to-string "free -b | tail -2")
                       "\n"
                       t)))
 
@@ -413,7 +418,12 @@ For TEXT-PADDING and BAR-LENGTH, see the documentation of
   "Get memory usage for UNIX systems.
 Compatible with Darwin and FreeBSD at least."
   (let* ((command-to-mem (lambda (command)
-                           (string-to-number (s-trim (cadr (split-string (shell-command-to-string command) " " t)))))))
+                           (string-to-number
+                            (s-trim
+                             (cadr
+                              (split-string (eshell-info-banner--shell-command-to-string command)
+                                            " "
+                                            t)))))))
     `(("RAM"
        ,(apply command-to-mem '("sysctl hw.physmem"))
        ,(apply command-to-mem '("sysctl hw.usermem"))))))
@@ -422,7 +432,7 @@ Compatible with Darwin and FreeBSD at least."
 
 (defun eshell-info-banner--get-memory/darwin ()
   "Get memory usage for macOS."
-  (let* ((mem (s-lines (shell-command-to-string "LANG=C vm_stat")))
+  (let* ((mem (s-lines (eshell-info-banner--shell-command-to-string "vm_stat")))
          (mem (cl-remove-if-not (lambda (line)
                                   (string-match-p "^Pages \\(free\\|active\\|inactive\\|speculative\\|wired\\)"
                                                   line))
@@ -617,7 +627,7 @@ If RELEASE-FILE is nil, use '/etc/os-release'."
 
 (defun eshell-info-banner--get-os-information-from-lsb-release ()
   "Read the operating system information from lsb_release."
-  (shell-command-to-string "lsb_release -d -s"))
+  (eshell-info-banner--shell-command-to-string "lsb_release -d -s"))
 
 (defun eshell-info-banner--get-os-information-from-registry ()
   "Read the operating system information from the Windows registry."
@@ -656,7 +666,7 @@ If RELEASE-FILE is nil, use '/etc/os-release'."
         ((file-exists-p (concat prefix "/etc/os-release"))
          (eshell-info-banner--get-os-information-from-release-file))
         ((executable-find "shepherd")
-         (let ((distro (car (s-lines (shell-command-to-string "guix -V")))))
+         (let ((distro (car (s-lines (eshell-info-banner--shell-command-to-string "guix -V")))))
            (save-match-data
              (string-match "\\([0-9\\.]+\\)" distro)
              (concat "Guix System "
@@ -670,7 +680,7 @@ If RELEASE-FILE is nil, use '/etc/os-release'."
                      (buffer-string)))))
         (t "Unknown"))
       .
-      ,(s-trim (shell-command-to-string "uname -rs")))))
+      ,(s-trim (eshell-info-banner--shell-command-to-string "uname -rs")))))
 
 (defmacro eshell-info-banner--get-macos-name (version)
   "Get the name of the current macOS or OSX system based on its VERSION."
@@ -684,9 +694,9 @@ If RELEASE-FILE is nil, use '/etc/os-release'."
 
 (defun eshell-info-banner--get-os-information/darwin ()
   "See `eshell-info-banner--get-os-information'."
-  `(,(eshell-info-banner--get-macos-name (s-trim (shell-command-to-string "sw_vers -productVersion")))
+  `(,(eshell-info-banner--get-macos-name (s-trim (eshell-info-banner--shell-command-to-string "sw_vers -productVersion")))
     .
-    ,(s-trim (shell-command-to-string "uname -rs"))))
+    ,(s-trim (eshell-info-banner--shell-command-to-string "uname -rs"))))
 
 (defun eshell-info-banner--get-os-information ()
   "Get operating system identifying information.
