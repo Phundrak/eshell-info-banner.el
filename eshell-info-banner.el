@@ -318,7 +318,7 @@ Return detected partitions as a list of structs.  See
 `eshell-info-banner-partition-prefixes' to see how partitions are
 chosen."
   (progn
-    (message "Partition detection for Windows and DOS not yet supported.")
+    (warn "Partition detection for Windows and DOS not yet supported.")
     nil))
 
 (defun eshell-info-banner--get-mounted-partitions/darwin ()
@@ -363,7 +363,7 @@ Return detected partitions as a list of structs."
         (eshell-info-banner--get-mounted-partitions/darwin))
        (other
         (progn
-         (message "Partition detection for %s not yet supported." other)
+         (warn "Partition detection for %s not yet supported." other)
          nil)))))
 
 (defun eshell-info-banner--partition-to-string (partition text-padding bar-length)
@@ -444,7 +444,7 @@ For TEXT-PADDING and BAR-LENGTH, see the documentation of
 
 (defun eshell-info-banner--get-memory/windows ()
   "Get memory usage for Window."
-  (message "Memory usage not yet implemented for Windows and DOS")
+  (warn "Memory usage not yet implemented for Windows and DOS")
   nil)
 
 (defun eshell-info-banner--get-memory ()
@@ -464,7 +464,7 @@ in bytes."
      (eshell-info-banner--get-memory/darwin))
     ((or 'ms-dos 'windows-nt 'cygwin)
      (eshell-info-banner--get-memory/windows))
-    (os (message "Memory usage not yet implemented for %s" os)
+    (os (warn "Memory usage not yet implemented for %s" os)
         nil)))
 
 (defun eshell-info-banner--memory-to-string (type total used text-padding bar-length)
@@ -688,7 +688,9 @@ build number)."
     ((or 'gnu 'gnu/linux 'gnu/kfreebsd)
      (eshell-info-banner--get-os-information/gnu))
     ('darwin
-     (eshell-info-banner--get-os-information/darwin))))
+     (eshell-info-banner--get-os-information/darwin))
+    (os (warn "Operating system information retrieving not yet supported for %s")
+        '((format "%s") . "Unknown"))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
