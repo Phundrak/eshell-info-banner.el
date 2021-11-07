@@ -41,6 +41,7 @@
 (require 'dash)
 (require 'f)
 (require 'em-banner)
+(require 'json)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -60,26 +61,28 @@
 
 (defconst eshell-info-banner--min-length-left 8
   "Minimum length of text on the left hand side of the banner.")
-(defconst eshell-info-banner--macos-versions
-  '(("10.4"  . "Mac OS X Tiger")
-    ("10.5"  . "Mac OS X Leopard")
-    ("10.6"  . "Mac OS X Snow Leopard")
-    ("10.7"  . "Mac OS X Lion")
-    ("10.8"  . "OS X Mountain Lion")
-    ("10.9"  . "OS X Mavericks")
-    ("10.10" . "OS X Yosemite")
-    ("10.11" . "OS X El Capitan")
-    ("10.12" . "macOS Sierra")
-    ("10.13" . "macOS High Sierra")
-    ("10.14" . "macOS Mojave")
-    ("10.15" . "macOS Catalina")
-    ("10.16" . "macOS Big Sur")
-    ("11.0"  . "macOS Big Sur")
-    ("11.1"  . "macOS Big Sur")
-    ("11.2"  . "macOS Big Sur")
-    ("11.3"  . "macOS Big Sur")
-    ("11.4"  . "macOS Big Sur"))
-  "Versions of OSX and macOS and their name.")
+
+(eval-when-compile
+  (defconst eshell-info-banner--macos-versions
+    '(("10.4"  . "Mac OS X Tiger")
+      ("10.5"  . "Mac OS X Leopard")
+      ("10.6"  . "Mac OS X Snow Leopard")
+      ("10.7"  . "Mac OS X Lion")
+      ("10.8"  . "OS X Mountain Lion")
+      ("10.9"  . "OS X Mavericks")
+      ("10.10" . "OS X Yosemite")
+      ("10.11" . "OS X El Capitan")
+      ("10.12" . "macOS Sierra")
+      ("10.13" . "macOS High Sierra")
+      ("10.14" . "macOS Mojave")
+      ("10.15" . "macOS Catalina")
+      ("10.16" . "macOS Big Sur")
+      ("11.0"  . "macOS Big Sur")
+      ("11.1"  . "macOS Big Sur")
+      ("11.2"  . "macOS Big Sur")
+      ("11.3"  . "macOS Big Sur")
+      ("11.4"  . "macOS Big Sur"))
+    "Versions of OSX and macOS and their name."))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
