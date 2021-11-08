@@ -2,8 +2,8 @@
 
 ;; Author: Lucien Cartier-Tilet <lucien@phundrak.com>
 ;; Maintainer: Lucien Cartier-Tilet <lucien@phundrak.com>
-;; Version: 0.6.1
-;; Package-Requires: ((emacs "25") (dash "2") (f "0.20") (s "1"))
+;; Version: 0.7.0
+;; Package-Requires: ((emacs "25.1") (dash "2") (f "0.20") (s "1"))
 ;; Homepage: https://labs.phundrak.com/phundrak/eshell-info-banner.el
 
 ;; This file is not part of GNU Emacs
@@ -50,6 +50,7 @@
 
 (defgroup eshell-info-banner ()
   "System information as your Eshell banner."
+  :group 'eshell
   :prefix "eshell-info-banner-"
   :link '(url-link :tag "Gitea" "https://labs.phundrak.com/phundrak/eshell-info-banner.el")
   :link '(url-link :tag "Github" "https://github.com/Phundrak/eshell-info-banner.el"))
@@ -165,17 +166,17 @@
 
 (defface eshell-info-banner-normal-face
   '((t :inherit font-lock-string-face))
-  "Face for eshell-info-banner progress bars displaying acceptable levels."
+  "Face for `eshell-info-banner' progress bars displaying acceptable levels."
   :group 'eshell-info-banner)
 
 (defface eshell-info-banner-warning-face
   '((t :inherit warning))
-  "Face for eshell-info-banner progress bars displaying high levels."
+  "Face for `eshell-info-banner' progress bars displaying high levels."
   :group 'eshell-info-banner)
 
 (defface eshell-info-banner-critical-face
   '((t :inherit error))
-  "Face for eshell-info-banner progress bars displaying critical levels."
+  "Face for `eshell-info-banner' progress bars displaying critical levels."
   :group 'eshell-info-banner)
 
 
@@ -225,7 +226,8 @@ If the executable `uptime' is not found, return nil."
 (defun eshell-info-banner--get-longest-path (partitions)
   "Return the length of the longest partition path in `PARTITIONS'.
 
-The returned value is in any case greater than `eshell-info-banner--min-length-left'."
+The returned value is in any case greater than
+`eshell-info-banner--min-length-left'."
   (-reduce-from (lambda (len partition)
                   (max len
                        (length (eshell-info-banner--mounted-partitions-path partition))))
@@ -263,7 +265,7 @@ neither of these, an error will be thrown by the function."
             (eshell-info-banner--abbr-path (cdr path))))
    (t (error "Invalid argument %s, neither stringp or listp" path))))
 
-(defun eshell-info-banner--get-mounted-partitions/duf ()
+(defun eshell-info-banner--get-mounted-partitions-duf ()
     "Detect mounted partitions on systems supporting `duf'.
 
 Return detected partitions as a list of structs. See
@@ -292,11 +294,11 @@ chosen. Relies on the `duf' command."
                    :percent percent)))
               partitions)))
 
-(defun eshell-info-banner--get-mounted-partitions/df (mount-position)
+(defun eshell-info-banner--get-mounted-partitions-df (mount-position)
   "Get mounted partitions through df.
 Common function between
-`eshell-info-banner--get-mounted-partitions/gnu' and
-`eshell-info-banner--get-mounted-partitions/darwing' which would
+`eshell-info-banner--get-mounted-partitions-gnu' and
+`eshell-info-banner--get-mounted-partitions-darwing' which would
 otherwise differ solely on the position of the mount point in the
 partition list. Its position is given by the argument
 MOUNT-POSITION."
@@ -321,15 +323,15 @@ MOUNT-POSITION."
                             (string-trim-left percent (regexp-quote "%")))))))
            partitions)))
 
-(defun eshell-info-banner--get-mounted-partitions/gnu ()
+(defun eshell-info-banner--get-mounted-partitions-gnu ()
   "Detect mounted partitions on a Linux system.
 
 Return detected partitions as a list of structs.  See
 `eshell-info-banner-partition-prefixes' to see how partitions are
 chosen.  Relies on the `df' command."
-  (eshell-info-banner--get-mounted-partitions/df 5))
+  (eshell-info-banner--get-mounted-partitions-df 5))
 
-(defun eshell-info-banner--get-mounted-partitions/windows ()
+(defun eshell-info-banner--get-mounted-partitions-windows ()
   "Detect mounted partitions on a Windows system.
 
 Return detected partitions as a list of structs.  See
@@ -339,27 +341,27 @@ chosen."
     (warn "Partition detection for Windows and DOS not yet supported.")
     nil))
 
-(defun eshell-info-banner--get-mounted-partitions/darwin ()
+(defun eshell-info-banner--get-mounted-partitions-darwin ()
   "Detect mounted partitions on a Darwin/macOS system.
 
 Return detected partitions as a list of structs.  See
 `eshell-info-banner-partition-prefixes' to see how partitions are
 chosen.  Relies on the `df' command."
-  (eshell-info-banner--get-mounted-partitions/df 8))
+  (eshell-info-banner--get-mounted-partitions-df 8))
 
 (defun eshell-info-banner--get-mounted-partitions ()
   "Detect mounted partitions on the system.
 
 Return detected partitions as a list of structs."
   (if eshell-info-banner-use-duf
-      (eshell-info-banner--get-mounted-partitions/duf)
+      (eshell-info-banner--get-mounted-partitions-duf)
     (pcase system-type
        ((or 'gnu 'gnu/linux 'gnu/kfreebsd 'berkeley-unix)
-        (eshell-info-banner--get-mounted-partitions/gnu))
+        (eshell-info-banner--get-mounted-partitions-gnu))
        ((or 'ms-dos 'windows-nt 'cygwin)
-        (eshell-info-banner--get-mounted-partitions/windows))
+        (eshell-info-banner--get-mounted-partitions-windows))
        ('darwin
-        (eshell-info-banner--get-mounted-partitions/darwin))
+        (eshell-info-banner--get-mounted-partitions-darwin))
        (other
         (progn
          (warn "Partition detection for %s not yet supported." other)
@@ -397,7 +399,7 @@ For TEXT-PADDING and BAR-LENGTH, see the documentation of
 
 
                                         ; Memory ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun eshell-info-banner--get-memory/gnu ()
+(defun eshell-info-banner--get-memory-gnu ()
   "Get memory usage for GNU/Linux and Hurd."
   (-map (lambda (line)
           (let* ((line (split-string line " " t)))
@@ -408,7 +410,7 @@ For TEXT-PADDING and BAR-LENGTH, see the documentation of
                       "\n"
                       t)))
 
-(defun eshell-info-banner--get-memory/unix ()
+(defun eshell-info-banner--get-memory-unix ()
   "Get memory usage for UNIX systems.
 Compatible with Darwin and FreeBSD at least."
   (let* ((command-to-mem (lambda (command)
@@ -422,37 +424,7 @@ Compatible with Darwin and FreeBSD at least."
        ,(apply command-to-mem '("sysctl hw.physmem"))
        ,(apply command-to-mem '("sysctl hw.usermem"))))))
 
-(defalias 'eshell-info-banner--get-memory/bsd #'eshell-info-banner--get-memory/unix)
-
-(defun eshell-info-banner--get-memory/darwin ()
-  "Get memory usage for macOS."
-  (let* ((mem (s-lines (eshell-info-banner--shell-command-to-string "vm_stat")))
-         (mem (cl-remove-if-not (lambda (line)
-                                  (string-match-p "^Pages \\(free\\|active\\|inactive\\|speculative\\|wired\\)"
-                                                  line))
-                                mem))
-         (mem (mapcar (lambda (line)
-                        (save-match-data
-                          (string-match "^Pages \\([[:alpha:] ]+\\): *\\([[:digit:]]+\\)\\." line)
-                          `(,(substring-no-properties line
-                                                      (match-beginning 1)
-                                                      (match-end 1))
-                            .
-                            ,(string-to-number (substring-no-properties line
-                                                                        (match-beginning 2)
-                                                                        (match-end 2))))))
-                      mem))
-         (total (cl-reduce (lambda (acc val)
-                             (+ acc (cdr val)))
-                           mem
-                           :initial-value 0))
-         (used (+ (cdr (assoc "active" mem))
-                  (cdr (assoc "wired down" mem)))))
-    `(("RAM"
-       ,(* 4096 total)
-       ,(* 4096 used)))))
-
-(defun eshell-info-banner--get-memory/windows ()
+(defun eshell-info-banner--get-memory-windows ()
   "Get memory usage for Window."
   (warn "Memory usage not yet implemented for Windows and DOS")
   nil)
@@ -467,13 +439,11 @@ total amount of memory available, and the amount of used memory,
 in bytes."
   (pcase system-type
     ((or 'gnu 'gnu/linux)
-     (eshell-info-banner--get-memory/gnu))
-    ('gnu/kfreebsd
-     (eshell-info-banner--get-memory/bsd))
-    ((or 'darwin 'berkeley-unix)
-     (eshell-info-banner--get-memory/unix))
+     (eshell-info-banner--get-memory-gnu))
+    ((or 'darwin 'berkeley-unix 'gnu/kfreebsd)
+     (eshell-info-banner--get-memory-unix))
     ((or 'ms-dos 'windows-nt 'cygwin)
-     (eshell-info-banner--get-memory/windows))
+     (eshell-info-banner--get-memory-windows))
     (os (warn "Memory usage not yet implemented for %s" os)
         nil)))
 
@@ -636,7 +606,7 @@ If RELEASE-FILE is nil, use '/etc/os-release'."
          ((string= "BuildLab" (match-string 1)) (setq win32-build (match-string 3)))))
       (format "%s (%s)" win32-name win32-build))))
 
-(defun eshell-info-banner--get-os-information/windows ()
+(defun eshell-info-banner--get-os-information-windows ()
   "See `eshell-info-banner--get-os-information'."
   (let ((os (eshell-info-banner--get-os-information-from-registry)))
     (save-match-data
@@ -649,7 +619,7 @@ If RELEASE-FILE is nil, use '/etc/os-release'."
                                   (match-beginning 2)
                                   (match-end 2))))))
 
-(defun eshell-info-banner--get-os-information/gnu ()
+(defun eshell-info-banner--get-os-information-gnu ()
   "See `eshell-info-banner--get-os-information'."
   (let ((prefix (if eshell-info-banner-tramp-aware (file-remote-p default-directory) "")))
     `(,(cond
@@ -686,7 +656,7 @@ If RELEASE-FILE is nil, use '/etc/os-release'."
               eshell-info-banner--macos-versions)
     (t "unkown version")))
 
-(defun eshell-info-banner--get-os-information/darwin ()
+(defun eshell-info-banner--get-os-information-darwin ()
   "See `eshell-info-banner--get-os-information'."
   `(,(eshell-info-banner--get-macos-name (s-trim (eshell-info-banner--shell-command-to-string "sw_vers -productVersion")))
     .
@@ -699,12 +669,12 @@ and second its kernel name and version (or in Windows’ case its
 build number)."
   (pcase system-type
     ((or 'ms-dos 'windows-nt 'cygwin)
-     (eshell-info-banner--get-os-information/windows))
+     (eshell-info-banner--get-os-information-windows))
     ((or 'gnu 'gnu/linux 'gnu/kfreebsd 'berkeley-unix)
-     (eshell-info-banner--get-os-information/gnu))
+     (eshell-info-banner--get-os-information-gnu))
     ('darwin
-     (eshell-info-banner--get-os-information/darwin))
-    (os (warn "Operating system information retrieving not yet supported for %s")
+     (eshell-info-banner--get-os-information-darwin))
+    (os (warn "Operating system information retrieving not yet supported for %s" os)
         '((format "%s") . "Unknown"))))
 
 

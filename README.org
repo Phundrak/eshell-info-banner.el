@@ -18,12 +18,38 @@ macOS. PR are welcome if you want to fix that!
 
 * Table of Contents                                                :TOC_2_gh:
 - [[#introduction][Introduction]]
+- [[#recent-breaking-changes][Recent Breaking Changes]]
+  - [[#070][~0.7.0~]]
 - [[#installation][Installation]]
 - [[#customizing][Customizing]]
 - [[#my-computer-doesnt-have-a-battery-will-this-still-work][My computer doesn’t have a battery, will this still work?]]
 - [[#advice-for-windows-users][Advice for Windows users]]
 - [[#contributing][Contributing]]
 - [[#license][License]]
+
+* Recent Breaking Changes
+** ~0.7.0~
+Version ~0.7.0~ renames several functions to conform with the Elisp
+Coding Conventions.
+| Old Name                                           | New Name                                           |
+|----------------------------------------------------+----------------------------------------------------|
+| ~eshell-info-banner--ge-mounted-partitions/duf~      | ~eshell-info-banner--ge-mounted-partitions-duf~      |
+| ~eshell-info-banner--get-mounted-partitions/df~      | ~eshell-info-banner--get-mounted-partitions-df~      |
+| ~eshell-info-banner--get-mounted-partitions/windows~ | ~eshell-info-banner--get-mounted-partitions-windows~ |
+| ~eshell-info-banner--get-mounted-partitions/darwin~  | ~eshell-info-banner--get-mounted-partitions-darwin~  |
+| ~eshell-info-banner--get-mounted-partitions/gnu~     | ~eshell-info-banner--get-mounted-partitions-gnu~     |
+| ~eshell-info-banner--get-memory/gnu~                 | ~eshell-info-banner--get-memory-gnu~                 |
+| ~eshell-info-banner--get-memory/unix~                | ~eshell-info-banner--get-memory-unix~                |
+| ~eshell-info-banner--get-memory/windows~             | ~eshell-info-banner--get-memory-windows~             |
+| ~eshell-info-banner--get-os-information/windows~     | ~eshell-info-banner--get-os-information-windows~     |
+| ~eshell-info-banner--get-os-information/gnu~         | ~eshell-info-banner--get-os-information-gnu~         |
+| ~eshell-info-banner--get-os-information/darwin~      | ~eshell-info-banner--get-os-information-darwin~      |
+
+The following function was removed:
+- ~eshell-info-banner--get-memory/darwin~
+
+The following alias (replacing an old function) was removed:
+- ~eshell-info-banner--get-memory/bsd~
 
 * Installation
 A couple of options are available for installing
