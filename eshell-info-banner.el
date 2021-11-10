@@ -2,8 +2,8 @@
 
 ;; Author: Lucien Cartier-Tilet <lucien@phundrak.com>
 ;; Maintainer: Lucien Cartier-Tilet <lucien@phundrak.com>
-;; Version: 0.7.0
-;; Package-Requires: ((emacs "25.1") (dash "2") (f "0.20") (s "1"))
+;; Version: 0.7.1
+;; Package-Requires: ((emacs "25.1") (f "0.20") (s "1"))
 ;; Homepage: https://labs.phundrak.com/phundrak/eshell-info-banner.el
 
 ;; This file is not part of GNU Emacs
@@ -38,10 +38,10 @@
 ;;; Code:
 
 (require 'cl-lib)
-(require 'dash)
 (require 'f)
 (require 'em-banner)
 (require 'json)
+(require 'seq)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -228,11 +228,10 @@ If the executable `uptime' is not found, return nil."
 
 The returned value is in any case greater than
 `eshell-info-banner--min-length-left'."
-  (-reduce-from (lambda (len partition)
-                  (max len
-                       (length (eshell-info-banner--mounted-partitions-path partition))))
-                eshell-info-banner--min-length-left
-                partitions))
+  (let ((length eshell-info-banner--min-length-left))
+    (dolist (partition partitions length)
+      (setf length (max length
+                        (length (eshell-info-banner--mounted-partitions-path partition)))))))
 
 (defun eshell-info-banner--abbr-path (path &optional abbr)
   "Remove `$HOME' from `PATH', abbreviate parent dirs if `ABBR' non nil.
@@ -302,25 +301,27 @@ Common function between
 otherwise differ solely on the position of the mount point in the
 partition list. Its position is given by the argument
 MOUNT-POSITION."
-  (let ((partitions (split-string (eshell-info-banner--shell-command-to-string "df -lH") (regexp-quote "\n") t)))
-    (-keep (lambda (partition)
-             (let* ((partition  (split-string partition " " t))
-                    (filesystem (nth 0              partition))
-                    (size       (nth 1              partition))
-                    (used       (nth 2              partition))
-                    (percent    (nth 4              partition))
-                    (mount      (nth mount-position partition)))
-               (when (seq-some (lambda (prefix)
-                                 (string-prefix-p prefix filesystem t))
-                               eshell-info-banner-partition-prefixes)
-                 (make-eshell-info-banner--mounted-partitions
-                  :path (if (> (length mount) eshell-info-banner-shorten-path-from)
-                            (eshell-info-banner--abbr-path mount t)
-                          mount)
-                  :size size
-                  :used used
-                  :percent (string-to-number
-                            (string-trim-left percent (regexp-quote "%")))))))
+  (let ((partitions (split-string (eshell-info-banner--shell-command-to-string "df -lH")
+                                  (regexp-quote "\n")
+                                  t)))
+    (seq-filter (lambda (partition)
+                  (let* ((partition  (split-string partition " " t))
+                         (filesystem (nth 0 partition))
+                         (size       (nth 1 partition))
+                         (used       (nth 2 partition))
+                         (percent    (nth 4 partition))
+                         (mount      (nth mount-position partition)))
+                    (unless (seq-some (lambda (prefix)
+                                        (string-prefix-p prefix filesystem t))
+                                      eshell-info-banner-partition-prefixes)
+                      (make-eshell-info-banner--mounted-partitions
+                       :path (if (> (length mount) eshell-info-banner-shorten-path-from)
+                                 (eshell-info-banner--abbr-path mount t)
+                               mount)
+                       :size size
+                       :used used
+                       :percent (string-to-number
+                                 (string-trim-left percent (regexp-quote "%")))))))
            partitions)))
 
 (defun eshell-info-banner--get-mounted-partitions-gnu ()
@@ -401,14 +402,14 @@ For TEXT-PADDING and BAR-LENGTH, see the documentation of
                                         ; Memory ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun eshell-info-banner--get-memory-gnu ()
   "Get memory usage for GNU/Linux and Hurd."
-  (-map (lambda (line)
-          (let* ((line (split-string line " " t)))
-            (list (s-chop-suffix ":" (nth 0 line))   ; name
-                  (string-to-number (nth 1 line))    ; total
-                  (string-to-number (nth 2 line))))) ; used
-        (split-string (eshell-info-banner--shell-command-to-string "free -b | tail -2")
-                      "\n"
-                      t)))
+  (seq-do (lambda (line)
+            (let* ((line (split-string line " " t)))
+              (list (s-chop-suffix ":" (nth 0 line))   ; name
+                    (string-to-number (nth 1 line))    ; total
+                    (string-to-number (nth 2 line))))) ; used
+          (split-string (eshell-info-banner--shell-command-to-string "free -b | tail -2")
+                        "\n"
+                        t)))
 
 (defun eshell-info-banner--get-memory-unix ()
   "Get memory usage for UNIX systems.
