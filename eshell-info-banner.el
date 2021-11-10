@@ -24,7 +24,7 @@
 
 ;;; Commentary:
 
-;; `eshell-info-banner' is a utility for cerating an informative
+;; `eshell-info-banner' is a utility for creating an informative
 ;; banner akin to fish_greeting if fish shell but for Eshell.  It can
 ;; provide information on:
 ;; - the OS’ name
@@ -298,7 +298,7 @@ chosen. Relies on the `duf' command."
   "Get mounted partitions through df.
 Common function between
 `eshell-info-banner--get-mounted-partitions-gnu' and
-`eshell-info-banner--get-mounted-partitions-darwing' which would
+`eshell-info-banner--get-mounted-partitions-darwin' which would
 otherwise differ solely on the position of the mount point in the
 partition list. Its position is given by the argument
 MOUNT-POSITION."
@@ -654,7 +654,7 @@ If RELEASE-FILE is nil, use '/etc/os-release'."
                                  ,version)
                  ,(cdr major)))
               eshell-info-banner--macos-versions)
-    (t "unkown version")))
+    (t "unknown version")))
 
 (defun eshell-info-banner--get-os-information-darwin ()
   "See `eshell-info-banner--get-os-information'."
