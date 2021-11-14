@@ -1,6 +1,8 @@
 #+title: eshell-info-banner.el
 #+author: Lucien Cartier-Tilet
 #+email: lucien@phundrak.com
+[[https://melpa.org/#/eshell-info-banner][file:https://melpa.org/packages/eshell-info-banner-badge.svg]]
+
 * Introduction
 ~eshell-info-banner.el~ is a utility for creating an informative banner,
 akin to ~fish_greeting~ but for Eshell. But an image is worth a thousand
@@ -60,12 +62,12 @@ your ~load-path~ and add the following to your ~.emacs~ or your ~init.el~:
   (add-hook 'eshell-banner-load-hook 'eshell-info-banner-update-banner)
 #+end_src
 
-If you use ~use-package~ only, you can then install it like so:
+If you use ~use-package~ only and install the package from MELPA, you
+can then install it like so:
 #+begin_src emacs-lisp
   (use-package eshell-info-banner
     :ensure t
     :defer t
-    :load-path "~/path/to/where/you/cloned/it/eshell-info-banner.el/"
     :hook (eshell-banner-load . eshell-info-banner-update-banner))
 #+end_src
 
@@ -74,22 +76,16 @@ In my case, I prefer using ~use-package~ with ~straight~:
   (use-package eshell-info-banner
     :ensure t
     :defer t
-    :straight (eshell-info-banner :type git
-                                  :host github
-                                  :repo "phundrak/eshell-info-banner.el")
+    :straight (:build t)
     :hook (eshell-banner-load . eshell-info-banner-update-banner))
 #+end_src
 
-I personally also added ~:build t~ in the straight recipe to ensure
-Emacs compiles my package, both to ~.elc~ and ~.eln~ files (I am on Emacs
-28.0, ~feature/native-comp~ got merged into ~master~!)
+You can just use ~:straight t~ if you do not want to ensure the package
+gets compiled by Emacs.
 
 There is probably a similar way to install it with pure ~straight.el~ or
 ~quelpa~, but I’m not knowledgable enough for that, feel free to create
 a PR to add some more installation instructions!
-
-There is currently no plans of making this package available on MELPA
-or non-gnu elpa.
 
 * Customizing
 A couple of variables can be edited by the user in order to configure
