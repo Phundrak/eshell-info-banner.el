@@ -2,7 +2,7 @@
 
 ;; Author: Lucien Cartier-Tilet <lucien@phundrak.com>
 ;; Maintainer: Lucien Cartier-Tilet <lucien@phundrak.com>
-;; Version: 0.7.1
+;; Version: 0.7.2
 ;; Package-Requires: ((emacs "25.1") (f "0.20") (s "1"))
 ;; Homepage: https://labs.phundrak.com/phundrak/eshell-info-banner.el
 
@@ -402,7 +402,7 @@ For TEXT-PADDING and BAR-LENGTH, see the documentation of
                                         ; Memory ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun eshell-info-banner--get-memory-gnu ()
   "Get memory usage for GNU/Linux and Hurd."
-  (seq-do (lambda (line)
+  (mapcar (lambda (line)
             (let* ((line (split-string line " " t)))
               (list (s-chop-suffix ":" (nth 0 line))   ; name
                     (string-to-number (nth 1 line))    ; total
