@@ -301,28 +301,29 @@ Common function between
 otherwise differ solely on the position of the mount point in the
 partition list. Its position is given by the argument
 MOUNT-POSITION."
-  (let ((partitions (split-string (eshell-info-banner--shell-command-to-string "df -lH")
-                                  (regexp-quote "\n")
-                                  t)))
-    (seq-filter (lambda (partition)
-                  (let* ((partition  (split-string partition " " t))
-                         (filesystem (nth 0 partition))
-                         (size       (nth 1 partition))
-                         (used       (nth 2 partition))
-                         (percent    (nth 4 partition))
-                         (mount      (nth mount-position partition)))
-                    (unless (seq-some (lambda (prefix)
-                                        (string-prefix-p prefix filesystem t))
-                                      eshell-info-banner-partition-prefixes)
-                      (make-eshell-info-banner--mounted-partitions
-                       :path (if (> (length mount) eshell-info-banner-shorten-path-from)
-                                 (eshell-info-banner--abbr-path mount t)
-                               mount)
-                       :size size
-                       :used used
-                       :percent (string-to-number
-                                 (string-trim-left percent (regexp-quote "%")))))))
-           partitions)))
+  (let ((partitions (cdr (split-string (eshell-info-banner--shell-command-to-string "df -lH")
+                                       (regexp-quote "\n")
+                                       t))))
+    (cl-remove-if #'null
+                  (mapcar (lambda (partition)
+                            (let* ((partition  (split-string partition " " t))
+                                   (filesystem (nth 0 partition))
+                                   (size       (nth 1 partition))
+                                   (used       (nth 2 partition))
+                                   (percent    (nth 4 partition))
+                                   (mount      (nth mount-position partition)))
+                              (when (seq-some (lambda (prefix)
+                                                (string-prefix-p prefix filesystem t))
+                                              eshell-info-banner-partition-prefixes)
+                                (make-eshell-info-banner--mounted-partitions
+                                 :path (if (> (length mount) eshell-info-banner-shorten-path-from)
+                                           (eshell-info-banner--abbr-path mount t)
+                                         mount)
+                                 :size size
+                                 :used used
+                                 :percent (string-to-number
+                                           (string-trim-left percent (regexp-quote "%")))))))
+                          partitions))))
 
 (defun eshell-info-banner--get-mounted-partitions-gnu ()
   "Detect mounted partitions on a Linux system.
