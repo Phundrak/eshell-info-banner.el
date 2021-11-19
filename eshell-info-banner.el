@@ -2,7 +2,7 @@
 
 ;; Author: Lucien Cartier-Tilet <lucien@phundrak.com>
 ;; Maintainer: Lucien Cartier-Tilet <lucien@phundrak.com>
-;; Version: 0.7.3
+;; Version: 0.7.4
 ;; Package-Requires: ((emacs "25.1") (f "0.20") (s "1"))
 ;; Homepage: https://labs.phundrak.com/phundrak/eshell-info-banner.el
 
@@ -82,7 +82,9 @@
       ("11.1"  . "macOS Big Sur")
       ("11.2"  . "macOS Big Sur")
       ("11.3"  . "macOS Big Sur")
-      ("11.4"  . "macOS Big Sur"))
+      ("11.4"  . "macOS Big Sur")
+      ("11.5"  . "macOS Big Sur")
+      ("11.6"  . "macOS Big Sur"))
     "Versions of OSX and macOS and their name."))
 
 
