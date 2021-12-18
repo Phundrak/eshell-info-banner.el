@@ -2,6 +2,7 @@
 #+author: Lucien Cartier-Tilet
 #+email: lucien@phundrak.com
 [[https://melpa.org/#/eshell-info-banner][file:https://melpa.org/packages/eshell-info-banner-badge.svg]]
+[[https://stable.melpa.org/#/eshell-info-banner][file:https://stable.melpa.org/packages/eshell-info-banner-badge.svg]]
 
 * Introduction
 ~eshell-info-banner.el~ is a utility for creating an informative banner,
@@ -33,8 +34,8 @@ macOS. PR are welcome if you want to fix that!
 ** ~0.7.0~
 Version ~0.7.0~ renames several functions to conform with the Elisp
 Coding Conventions.
-| Old Name                                             | New Name                                             |
-|------------------------------------------------------+------------------------------------------------------|
+| Old Name                                           | New Name                                           |
+|----------------------------------------------------+----------------------------------------------------|
 | ~eshell-info-banner--ge-mounted-partitions/duf~      | ~eshell-info-banner--ge-mounted-partitions-duf~      |
 | ~eshell-info-banner--get-mounted-partitions/df~      | ~eshell-info-banner--get-mounted-partitions-df~      |
 | ~eshell-info-banner--get-mounted-partitions/windows~ | ~eshell-info-banner--get-mounted-partitions-windows~ |
