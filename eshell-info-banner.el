@@ -661,6 +661,10 @@ If RELEASE-FILE is nil, use '/etc/os-release'."
            (s-trim (with-temp-buffer
                      (process-file "uname" nil t nil "-s")
                      (buffer-string)))))
+        ((and (file-exists-p (concat prefix "/system/app"))
+              (file-exists-p (concat prefix "/system/priv-app")))
+         (concat "Android "
+                 (s-trim (eshell-info-banner--shell-command-to-string "getprop ro.build.version.release"))))
         (t "Unknown"))
       .
       ,(s-trim (eshell-info-banner--shell-command-to-string "uname -rs")))))
