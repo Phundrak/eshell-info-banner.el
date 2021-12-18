@@ -2,7 +2,7 @@
 
 ;; Author: Lucien Cartier-Tilet <lucien@phundrak.com>
 ;; Maintainer: Lucien Cartier-Tilet <lucien@phundrak.com>
-;; Version: 0.7.6
+;; Version: 0.7.7
 ;; Package-Requires: ((emacs "25.1") (f "0.20") (s "1"))
 ;; Homepage: https://github.com/Phundrak/eshell-info-banner.el
 
@@ -89,6 +89,29 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                                        ;                Macros               ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defmacro eshell-info-banner--with-face (str &rest properties)
+  "Helper macro for applying face `PROPERTIES' to `STR'."
+  `(propertize ,str 'face (list ,@properties)))
+
+(defun eshell-info-banner--executable-find (program &optional remote)
+  (if (version< emacs-version "27.1")
+      (let ((default-directory (if (and eshell-info-banner-tramp-aware
+                                        remote)
+                                   default-directory
+                                 "~")))
+        (executable-find program))
+    (executable-find program remote)))
+
+(defun eshell-info-banner--shell-command-to-string (command)
+  "Execute shell command COMMAND and return its output as a string.
+Ensures the command is ran with LANG=C."
+  (shell-command-to-string (format "LANG=C %s" command)))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
                                         ;           Custom variables          ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -147,9 +170,10 @@
   :safe #'stringp
   :version "0.5.0")
 
-(defcustom eshell-info-banner-use-duf (if (executable-find eshell-info-banner-duf-executable)
-                                          t
-                                        nil)
+(defcustom eshell-info-banner-use-duf
+  (if (eshell-info-banner--executable-find eshell-info-banner-duf-executable)
+      t
+    nil)
   "If non-nil, use `duf' instead of `df'."
   :group 'eshell-info-banner
   :type 'boolean
@@ -183,20 +207,6 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                                        ;                Macros               ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defmacro eshell-info-banner--with-face (str &rest properties)
-  "Helper macro for applying face `PROPERTIES' to `STR'."
-  `(propertize ,str 'face (list ,@properties)))
-
-(defun eshell-info-banner--shell-command-to-string (command)
-  "Execute shell command COMMAND and return its output as a string.
-Ensures the command is ran with LANG=C."
-  (shell-command-to-string (format "LANG=C %s" command)))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
                                         ;          Internal functions         ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -206,7 +216,7 @@ Ensures the command is ran with LANG=C."
   "Get uptime of machine if `uptime' is available.
 
 If the executable `uptime' is not found, return nil."
-  (when (executable-find "uptime")
+  (when (eshell-info-banner--executable-find "uptime")
     (let ((uptime-str (eshell-info-banner--shell-command-to-string "uptime -p")))
       (if (not (seq-some (lambda (keyword)
                            (string-match-p keyword uptime-str))
@@ -634,7 +644,7 @@ If RELEASE-FILE is nil, use '/etc/os-release'."
                    (insert-file-contents (concat prefix "/bedrock/etc/bedrock-release"))
                    (buffer-string))))
         ;; Proxmox
-        ((executable-find "pveversion" eshell-info-banner-tramp-aware)
+        ((eshell-info-banner--executable-find "pveversion" eshell-info-banner-tramp-aware)
          (let ((distro (eshell-info-banner--shell-command-to-string "pveversion")))
            (save-match-data
              (string-match "/\\([^/]+\\)/" distro)
@@ -642,13 +652,13 @@ If RELEASE-FILE is nil, use '/etc/os-release'."
                      (substring-no-properties distro
                                               (match-beginning 1)
                                               (match-end 1))))))
-        ((executable-find "hostnamectl" eshell-info-banner-tramp-aware)
+        ((eshell-info-banner--executable-find "hostnamectl" eshell-info-banner-tramp-aware)
          (eshell-info-banner--get-os-information-from-hostnamectl))
-        ((executable-find "lsb_release" eshell-info-banner-tramp-aware)
+        ((eshell-info-banner--executable-find "lsb_release" eshell-info-banner-tramp-aware)
          (eshell-info-banner--get-os-information-from-lsb-release))
         ((file-exists-p (concat prefix "/etc/os-release"))
          (eshell-info-banner--get-os-information-from-release-file))
-        ((executable-find "shepherd")
+        ((eshell-info-banner--executable-find "shepherd")
          (let ((distro (car (s-lines (eshell-info-banner--shell-command-to-string "guix -V")))))
            (save-match-data
              (string-match "\\([0-9\\.]+\\)" distro)
