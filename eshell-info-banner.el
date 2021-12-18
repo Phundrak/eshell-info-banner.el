@@ -2,9 +2,9 @@
 
 ;; Author: Lucien Cartier-Tilet <lucien@phundrak.com>
 ;; Maintainer: Lucien Cartier-Tilet <lucien@phundrak.com>
-;; Version: 0.7.4
+;; Version: 0.7.5
 ;; Package-Requires: ((emacs "25.1") (f "0.20") (s "1"))
-;; Homepage: https://labs.phundrak.com/phundrak/eshell-info-banner.el
+;; Homepage: https://github.com/Phundrak/eshell-info-banner.el
 
 ;; This file is not part of GNU Emacs
 
