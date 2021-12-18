@@ -97,6 +97,10 @@
   `(propertize ,str 'face (list ,@properties)))
 
 (defun eshell-info-banner--executable-find (program &optional remote)
+  "Find PROGRAM executable, possibly on a REMOTE machine.
+This is a wrapper around `executable-find' in order to avoid
+issues with older versions of the functions only accepting one
+argument."
   (if (version< emacs-version "27.1")
       (let ((default-directory (if (and eshell-info-banner-tramp-aware
                                         remote)
