@@ -627,6 +627,20 @@ If RELEASE-FILE is nil, use '/etc/os-release'."
   "See `eshell-info-banner--get-os-information'."
   (let ((prefix (if eshell-info-banner-tramp-aware (file-remote-p default-directory) "")))
     `(,(cond
+        ;; Bedrock Linux
+        ((file-exists-p (concat prefix "/bedrock/etc/bedrock-release"))
+         (s-trim (with-temp-buffer
+                   (insert-file-contents (concat prefix "/bedrock/etc/bedrock-release"))
+                   (buffer-string))))
+        ;; Proxmox
+        ((executable-find "pveversion" eshell-info-banner-tramp-aware)
+         (let ((distro (eshell-info-banner--shell-command-to-string "pveversion")))
+           (save-match-data
+             (string-match "/\\([^/]+\\)/" distro)
+             (concat "Proxmox "
+                     (substring-no-properties distro
+                                              (match-beginning 1)
+                                              (match-end 1))))))
         ((executable-find "hostnamectl" eshell-info-banner-tramp-aware)
          (eshell-info-banner--get-os-information-from-hostnamectl))
         ((executable-find "lsb_release" eshell-info-banner-tramp-aware)
