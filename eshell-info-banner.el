@@ -457,13 +457,32 @@ Compatible with Darwin and FreeBSD at least."
   (let* ((command-to-mem (lambda (command)
                            (string-to-number
                             (s-trim
-                             (cadr
-                              (split-string (eshell-info-banner--shell-command-to-string command)
-                                            " "
-                                            t)))))))
-    `(("RAM"
-       ,(apply command-to-mem '("sysctl hw.physmem"))
-       ,(apply command-to-mem '("sysctl hw.usermem"))))))
+                             (car (last
+                                   (split-string (eshell-info-banner--shell-command-to-string command)
+                                                 " "
+                                                 t)))))))
+         (netbsdp        (and (equal system-type 'berkeley-unix)
+                              (string-match-p "NetBSD" (eshell-info-banner--shell-command-to-string "uname"))))
+         (total          (apply command-to-mem `(,(if netbsdp "sysctl hw.physmem64" "sysctl hw.physmem"))))
+         (used           (if netbsdp
+                             (- total
+                                (* 1024 (string-to-number
+                                         (s-trim
+                                          (with-temp-buffer
+                                            (insert-file-contents-literally "/proc/meminfo")
+                                            (save-match-data
+                                              (string-match (rx bol
+                                                                "MemFree:"
+                                                                (* blank)
+                                                                (group (+ digit))
+                                                                (* blank)
+                                                                "kB")
+                                                            (buffer-string))
+                                              (substring-no-properties (buffer-string)
+                                                                       (match-beginning 1)
+                                                                       (match-end 1))))))))
+                           (apply command-to-mem '("sysctl hw.usermem")))))
+    `(("RAM" ,total ,used))))
 
 (defun eshell-info-banner--get-memory-windows ()
   "Get memory usage for Window."
