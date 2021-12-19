@@ -224,7 +224,7 @@ If the executable `uptime' is not found, return nil."
     (let ((uptime-str (eshell-info-banner--shell-command-to-string "uptime -p")))
       (if (not (seq-some (lambda (keyword)
                            (string-match-p keyword uptime-str))
-                         '("invalid" "illegal")))
+                         '("invalid" "illegal" "unknown")))
           (s-chop-prefix "up " (s-trim uptime-str))
         (let ((uptime-str (eshell-info-banner--shell-command-to-string "uptime")))
           (save-match-data
