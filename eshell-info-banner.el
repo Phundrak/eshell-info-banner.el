@@ -2,7 +2,7 @@
 
 ;; Author: Lucien Cartier-Tilet <lucien@phundrak.com>
 ;; Maintainer: Lucien Cartier-Tilet <lucien@phundrak.com>
-;; Version: 0.7.7
+;; Version: 0.8.0
 ;; Package-Requires: ((emacs "25.1") (f "0.20") (s "1"))
 ;; Homepage: https://github.com/Phundrak/eshell-info-banner.el
 
@@ -89,33 +89,6 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                                        ;                Macros               ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defmacro eshell-info-banner--with-face (str &rest properties)
-  "Helper macro for applying face `PROPERTIES' to `STR'."
-  `(propertize ,str 'face (list ,@properties)))
-
-(defun eshell-info-banner--executable-find (program &optional remote)
-  "Find PROGRAM executable, possibly on a REMOTE machine.
-This is a wrapper around `executable-find' in order to avoid
-issues with older versions of the functions only accepting one
-argument."
-  (if (version< emacs-version "27.1")
-      (let ((default-directory (if (and eshell-info-banner-tramp-aware
-                                        remote)
-                                   default-directory
-                                 "~")))
-        (executable-find program))
-    (executable-find program remote)))
-
-(defun eshell-info-banner--shell-command-to-string (command)
-  "Execute shell command COMMAND and return its output as a string.
-Ensures the command is ran with LANG=C."
-  (shell-command-to-string (format "LANG=C %s" command)))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
                                         ;           Custom variables          ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -167,6 +140,19 @@ Ensures the command is ran with LANG=C."
   :type 'list
   :version "0.3.0")
 
+(defun eshell-info-banner--executable-find (program &optional remote)
+  "Find PROGRAM executable, possibly on a REMOTE machine.
+This is a wrapper around `executable-find' in order to avoid
+issues with older versions of the functions only accepting one
+argument."
+  (if (version< emacs-version "27.1")
+      (let ((default-directory (if (and eshell-info-banner-tramp-aware
+                                        remote)
+                                   default-directory
+                                 "~")))
+        (executable-find program))
+    (executable-find program remote)))
+
 (defcustom eshell-info-banner-duf-executable "duf"
   "Path to the `duf' executable."
   :group 'eshell-info-banner
@@ -183,6 +169,14 @@ Ensures the command is ran with LANG=C."
   :type 'boolean
   :safe #'booleanp
   :version "0.5.0")
+
+(defcustom eshell-info-banner-file-size-flavor nil
+  "Display sizes with IEC prefixes."
+  :group 'eshell-info-banner
+  :type '(radio (const :tag "Default" nil)
+                (const :tag "SI" si)
+                (const :tag "IEC" iec))
+  :version "0.8.0")
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -208,6 +202,39 @@ Ensures the command is ran with LANG=C."
   '((t :inherit error))
   "Face for `eshell-info-banner' progress bars displaying critical levels."
   :group 'eshell-info-banner)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                                        ;         Macros and Utilities        ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defmacro eshell-info-banner--with-face (str &rest properties)
+  "Helper macro for applying face `PROPERTIES' to `STR'."
+  `(propertize ,str 'face (list ,@properties)))
+
+(defun eshell-info-banner--shell-command-to-string (command)
+  "Execute shell command COMMAND and return its output as a string.
+Ensures the command is ran with LANG=C."
+  (shell-command-to-string (format "LANG=C %s" command)))
+
+(defun eshell-info-banner--progress-bar-without-prefix (bar-length used total &optional newline)
+  "Display a progress bar without its prefix.
+Display a progress bar of BAR-LENGTH length, followed by an
+indication of how full the memory is with a human readable USED
+and TOTAL size."
+  (let ((percentage (if (= used 0)
+                        0
+                      (/ (* 100 used) total))))
+    (concat (eshell-info-banner--progress-bar bar-length percentage)
+            (format (if (equal eshell-info-banner-file-size-flavor 'iec)
+                        " %8s / %-8s (%3s%%)%s"
+                      " %6s / %-6s (%3s%%)%s")
+                    (file-size-human-readable used eshell-info-banner-file-size-flavor)
+                    (file-size-human-readable total eshell-info-banner-file-size-flavor)
+                    (eshell-info-banner--with-face
+                     (number-to-string percentage)
+                     :inherit (eshell-info-banner--get-color-percentage percentage))
+                    (if newline "\n" "")))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -304,8 +331,8 @@ chosen. Relies on the `duf' command."
                    :path    (if (> (length mount-point) eshell-info-banner-shorten-path-from)
                                 (eshell-info-banner--abbr-path mount-point t)
                               mount-point)
-                   :size    (file-size-human-readable total)
-                   :used    (file-size-human-readable used)
+                   :size    total
+                   :used    used
                    :percent percent)))
               partitions)))
 
@@ -317,15 +344,15 @@ Common function between
 otherwise differ solely on the position of the mount point in the
 partition list. Its position is given by the argument
 MOUNT-POSITION."
-  (let ((partitions (cdr (split-string (eshell-info-banner--shell-command-to-string "df -lH")
+  (let ((partitions (cdr (split-string (eshell-info-banner--shell-command-to-string "df -l")
                                        (regexp-quote "\n")
                                        t))))
     (cl-remove-if #'null
                   (mapcar (lambda (partition)
                             (let* ((partition  (split-string partition " " t))
                                    (filesystem (nth 0 partition))
-                                   (size       (nth 1 partition))
-                                   (used       (nth 2 partition))
+                                   (size       (string-to-number (nth 1 partition)))
+                                   (used       (string-to-number (nth 2 partition)))
                                    (percent    (nth 4 partition))
                                    (mount      (nth mount-position partition)))
                               (when (seq-some (lambda (prefix)
@@ -390,20 +417,16 @@ Return detected partitions as a list of structs."
 
 For TEXT-PADDING and BAR-LENGTH, see the documentation of
 `eshell-info-banner--display-memory'."
-  (let ((percentage (eshell-info-banner--mounted-partitions-percent partition)))
-    (concat (s-pad-right text-padding
-                         "."
-                         (eshell-info-banner--with-face
-                          (eshell-info-banner--mounted-partitions-path partition)
-                          :weight 'bold))
-            ": "
-            (eshell-info-banner--progress-bar bar-length percentage)
-            (format " %6s / %-6s (%3s%%)"
-                    (eshell-info-banner--mounted-partitions-used partition)
-                    (eshell-info-banner--mounted-partitions-size partition)
-                    (eshell-info-banner--with-face
-                     (number-to-string percentage)
-                     :inherit (eshell-info-banner--get-color-percentage percentage))))))
+  (concat (s-pad-right text-padding
+                       "."
+                       (eshell-info-banner--with-face
+                        (eshell-info-banner--mounted-partitions-path partition)
+                        :weight 'bold))
+          ": "
+          (eshell-info-banner--progress-bar-without-prefix
+           bar-length
+           (eshell-info-banner--mounted-partitions-used partition)
+           (eshell-info-banner--mounted-partitions-size partition))))
 
 (defun eshell-info-banner--display-partitions (text-padding bar-length)
   "Display the detected mounted partitions of the system.
@@ -479,18 +502,9 @@ be displayed on the far right.
 
 `BAR-LENGTH' determines the length of the progress bar to be
 displayed."
-  (let ((percentage (if (= used 0)
-                        0
-                      (/ (* 100 used) total))))
-    (concat (s-pad-right text-padding "." type)
-            ": "
-            (eshell-info-banner--progress-bar bar-length percentage)
-            (format " %6s / %-6s (%3s%%)\n"
-                    (file-size-human-readable used)
-                    (file-size-human-readable total)
-                    (eshell-info-banner--with-face
-                     (number-to-string percentage)
-                     :inherit (eshell-info-banner--get-color-percentage percentage))))))
+  (concat (s-pad-right text-padding "." type)
+          ": "
+          (eshell-info-banner--progress-bar-without-prefix bar-length used total t)))
 
 (defun eshell-info-banner--display-memory (text-padding bar-length)
   "Display memories detected on your system.
@@ -581,7 +595,7 @@ the warning face with a battery level of 25% or less."
                 (eshell-info-banner--progress-bar bar-length
                                                   percentage
                                                   t)
-                (s-repeat 17 " ")
+                (s-repeat (if (equal eshell-info-banner-file-size-flavor 'iec) 21 17) " ")
                 (format "(%3s%%)\n"
                         (eshell-info-banner--with-face
                          (number-to-string percentage)
@@ -723,26 +737,29 @@ build number)."
 (defun eshell-info-banner ()
   "Banner for Eshell displaying system information."
   (let* ((default-directory (if eshell-info-banner-tramp-aware default-directory "~"))
-         (system-info   (eshell-info-banner--get-os-information))
-         (os            (car system-info))
-         (kernel        (cdr system-info))
-         (hostname      (if  eshell-info-banner-tramp-aware
-                            (or (file-remote-p default-directory 'host) (system-name))
-                          (system-name)))
-         (uptime        (eshell-info-banner--get-uptime))
-         (partitions    (eshell-info-banner--get-mounted-partitions))
-         (left-padding  (eshell-info-banner--get-longest-path partitions))
-         (left-text     (max (length os)
-                             (length hostname)))
-         (left-length   (+ left-padding 2 left-text)) ; + ": "
-         (right-text    (+ (length "Kernel: ")
-                           (max (length uptime)
-                                (length kernel))))
-         (tot-width     (max (+ left-length right-text 3)
-                             eshell-info-banner-width))
-         (middle-padding (- tot-width right-text left-padding 4))
+         (system-info       (eshell-info-banner--get-os-information))
+         (os                (car system-info))
+         (kernel            (cdr system-info))
+         (hostname          (if  eshell-info-banner-tramp-aware
+                                (or (file-remote-p default-directory 'host) (system-name))
+                              (system-name)))
+         (uptime             (eshell-info-banner--get-uptime))
+         (partitions         (eshell-info-banner--get-mounted-partitions))
+         (left-padding       (eshell-info-banner--get-longest-path partitions))
+         (left-text          (max (length os)
+                                  (length hostname)))
+         (left-length        (+ left-padding 2 left-text)) ; + ": "
+         (right-text         (+ (length "Kernel: ")
+                                (max (length uptime)
+                                     (length kernel))))
+         (tot-width          (max (+ left-length right-text 3)
+                                  eshell-info-banner-width))
+         (middle-padding     (- tot-width right-text left-padding 4))
 
-         (bar-length    (- tot-width left-padding 4 23)))
+         (bar-length         (- tot-width left-padding 4 23))
+         (bar-length         (if (equal eshell-info-banner-file-size-flavor 'iec)
+                                 (- bar-length 4)
+                               bar-length)))
     (concat (format "%s\n" (s-repeat tot-width eshell-info-banner-progress-bar-char))
             (format "%s: %s Kernel.: %s\n"
                     (s-pad-right left-padding

@@ -9,7 +9,7 @@
 akin to ~fish_greeting~ but for Eshell. But an image is worth a thousand
 words, let’s see how it looks like:
 
-#+caption: Screenshot of the default Eshell information banner
+#+caption: Screenshot of the default Eshell information banner (using the nord theme from ~doom-themes~)
 [[file:img/screenshot.png]]
 
 This will be displayed every time you open a new Eshell instance, or
@@ -25,6 +25,8 @@ macOS. PR are welcome if you want to fix that!
   - [[#070][~0.7.0~]]
 - [[#installation][Installation]]
 - [[#customizing][Customizing]]
+  - [[#custom-variables][Custom Variables]]
+  - [[#faces][Faces]]
 - [[#my-computer-doesnt-have-a-battery-will-this-still-work][My computer doesn’t have a battery, will this still work?]]
 - [[#advice-for-windows-users][Advice for Windows users]]
 - [[#contributing][Contributing]]
@@ -89,6 +91,7 @@ There is probably a similar way to install it with pure ~straight.el~ or
 a PR to add some more installation instructions!
 
 * Customizing
+** Custom Variables
 A couple of variables can be edited by the user in order to configure
 ~eshell-info-banner.el~:
 - ~eshell-info-banner-partition-prefixes~ :: Filter for which
@@ -143,7 +146,19 @@ A couple of variables can be edited by the user in order to configure
   this custom variable.
 
   Default value: ~duf~
+- ~eshell-info-banner-file-size-flavor~ :: This variable reflects the
+  possible values passed to the function ~file-size-human-readable~. It
+  can hold one of these three values:
+  - ~nil~
+  - ~si~
+  - ~iec~
+  Since the value ~iec~ generates longer file size prefixes, progress
+  bars become slightly shorter. For more details on this option, see
+  the documentation of ~file-size-human-readable~.
 
+  Default value: ~nil~
+
+** Faces
 Don’t like the colors used by the package? They should follow by
 default your theme, but you can customize the following faces:
 - ~eshell-info-banner-background-face~ :: Used for filling the empty
