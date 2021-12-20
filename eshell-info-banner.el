@@ -87,6 +87,9 @@
       ("11.6"  . "macOS Big Sur"))
     "Versions of OSX and macOS and their name."))
 
+(defconst eshell-info-banner--posix-shells '("bash" "zsh" "sh")
+  "List of POSIX-compliant shells to run external commands through.")
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
                                         ;           Custom variables          ;
@@ -215,7 +218,13 @@ argument. `executable-find'’s remote argument has the value of
 (defun eshell-info-banner--shell-command-to-string (command)
   "Execute shell command COMMAND and return its output as a string.
 Ensures the command is ran with LANG=C."
-  (shell-command-to-string (format "LANG=C %s" command)))
+  (let ((shell (or (seq-find (lambda (shell)
+                              (eshell-info-banner--executable-find shell))
+                            eshell-info-banner--posix-shells)
+                  "sh")))
+    (with-temp-buffer
+      (call-process shell nil t nil "-c" (concat "LANG=C " command))
+      (buffer-string))))
 
 (defun eshell-info-banner--progress-bar-without-prefix (bar-length used total &optional newline)
   "Display a progress bar without its prefix.
