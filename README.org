@@ -22,6 +22,7 @@ macOS. PR are welcome if you want to fix that!
 * Table of Contents                                                :TOC_2_gh:
 - [[#introduction][Introduction]]
 - [[#recent-breaking-changes][Recent Breaking Changes]]
+  - [[#081][~0.8.1~]]
   - [[#070][~0.7.0~]]
 - [[#installation][Installation]]
 - [[#customizing][Customizing]]
@@ -33,6 +34,11 @@ macOS. PR are welcome if you want to fix that!
 - [[#license][License]]
 
 * Recent Breaking Changes
+** ~0.8.1~
+Version ~0.8.1~ removes the optional argument ~REMOTE~ from
+~eshell-info-banner--executable-find~. It now only acts according to the
+user’s preference set with ~eshell-info-banner-tramp-aware~.
+
 ** ~0.7.0~
 Version ~0.7.0~ renames several functions to conform with the Elisp
 Coding Conventions.

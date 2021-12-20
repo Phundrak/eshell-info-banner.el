@@ -2,7 +2,7 @@
 
 ;; Author: Lucien Cartier-Tilet <lucien@phundrak.com>
 ;; Maintainer: Lucien Cartier-Tilet <lucien@phundrak.com>
-;; Version: 0.8.0
+;; Version: 0.8.1
 ;; Package-Requires: ((emacs "25.1") (f "0.20") (s "1"))
 ;; Homepage: https://github.com/Phundrak/eshell-info-banner.el
 
@@ -140,18 +140,18 @@
   :type 'list
   :version "0.3.0")
 
-(defun eshell-info-banner--executable-find (program &optional remote)
-  "Find PROGRAM executable, possibly on a REMOTE machine.
+(defun eshell-info-banner--executable-find (program)
+  "Find PROGRAM executable, possibly on a remote machine.
 This is a wrapper around `executable-find' in order to avoid
 issues with older versions of the functions only accepting one
-argument."
+argument. `executable-find'’s remote argument has the value of
+`eshell-info-banner-tramp-aware'."
   (if (version< emacs-version "27.1")
-      (let ((default-directory (if (and eshell-info-banner-tramp-aware
-                                        remote)
+      (let ((default-directory (if eshell-info-banner-tramp-aware
                                    default-directory
                                  "~")))
         (executable-find program))
-    (executable-find program remote)))
+    (executable-find program eshell-info-banner-tramp-aware)))
 
 (defcustom eshell-info-banner-duf-executable "duf"
   "Path to the `duf' executable."
@@ -681,7 +681,7 @@ If RELEASE-FILE is nil, use '/etc/os-release'."
                    (insert-file-contents (concat prefix "/bedrock/etc/bedrock-release"))
                    (buffer-string))))
         ;; Proxmox
-        ((eshell-info-banner--executable-find "pveversion" eshell-info-banner-tramp-aware)
+        ((eshell-info-banner--executable-find "pveversion")
          (let ((distro (eshell-info-banner--shell-command-to-string "pveversion")))
            (save-match-data
              (string-match "/\\([^/]+\\)/" distro)
@@ -689,9 +689,9 @@ If RELEASE-FILE is nil, use '/etc/os-release'."
                      (substring-no-properties distro
                                               (match-beginning 1)
                                               (match-end 1))))))
-        ((eshell-info-banner--executable-find "hostnamectl" eshell-info-banner-tramp-aware)
+        ((eshell-info-banner--executable-find "hostnamectl")
          (eshell-info-banner--get-os-information-from-hostnamectl))
-        ((eshell-info-banner--executable-find "lsb_release" eshell-info-banner-tramp-aware)
+        ((eshell-info-banner--executable-find "lsb_release")
          (eshell-info-banner--get-os-information-from-lsb-release))
         ((file-exists-p (concat prefix "/etc/os-release"))
          (eshell-info-banner--get-os-information-from-release-file))
