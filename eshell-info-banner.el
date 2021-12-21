@@ -65,7 +65,11 @@
 
 (eval-when-compile
   (defconst eshell-info-banner--macos-versions
-    '(("10.4"  . "Mac OS X Tiger")
+    '(("10.0"  . "Mac OS X Cheetah")
+      ("10.1"  . "Mac OS X Puma")
+      ("10.2"  . "Mac OS X Jaguar")
+      ("10.3"  . "Mac OS X Panther")
+      ("10.4"  . "Mac OS X Tiger")
       ("10.5"  . "Mac OS X Leopard")
       ("10.6"  . "Mac OS X Snow Leopard")
       ("10.7"  . "Mac OS X Lion")
@@ -84,7 +88,10 @@
       ("11.3"  . "macOS Big Sur")
       ("11.4"  . "macOS Big Sur")
       ("11.5"  . "macOS Big Sur")
-      ("11.6"  . "macOS Big Sur"))
+      ("11.6"  . "macOS Big Sur")
+      ("12.0"  . "macOS Monterey")
+      ("12.1"  . "macOS Monterey")
+      ("12.2"  . "macOS Monterey"))
     "Versions of OSX and macOS and their name."))
 
 (defconst eshell-info-banner--posix-shells '("bash" "zsh" "sh")
