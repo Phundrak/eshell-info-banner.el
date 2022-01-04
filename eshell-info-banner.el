@@ -2,7 +2,7 @@
 
 ;; Author: Lucien Cartier-Tilet <lucien@phundrak.com>
 ;; Maintainer: Lucien Cartier-Tilet <lucien@phundrak.com>
-;; Version: 0.8.2
+;; Version: 0.8.3
 ;; Package-Requires: ((emacs "25.1") (f "0.20") (s "1"))
 ;; Homepage: https://github.com/Phundrak/eshell-info-banner.el
 
@@ -655,7 +655,9 @@ The usage of `eshell-info-banner-warning-percentage' and
 thought of as the “percentage of discharge” of the computer.
 Thus, setting the warning at 75% will be translated as showing
 the warning face with a battery level of 25% or less."
-  (let ((battery-level (when (file-readable-p "/sys/") (battery))))
+  (let ((battery-level (unless (and (equal system-type 'gnu/linux)
+                                    (not (file-readable-p "/sys/")))
+                         (battery))))
     (if (or (null battery-level)
             (string= battery-level "Battery status not available")
             (string-match-p (regexp-quote "N/A") battery-level))
