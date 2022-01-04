@@ -2,7 +2,7 @@
 
 ;; Author: Lucien Cartier-Tilet <lucien@phundrak.com>
 ;; Maintainer: Lucien Cartier-Tilet <lucien@phundrak.com>
-;; Version: 0.8.1
+;; Version: 0.8.2
 ;; Package-Requires: ((emacs "25.1") (f "0.20") (s "1"))
 ;; Homepage: https://github.com/Phundrak/eshell-info-banner.el
 
@@ -467,38 +467,78 @@ For TEXT-PADDING and BAR-LENGTH, see the documentation of
                         "\n"
                         t)))
 
-(defun eshell-info-banner--get-memory-unix ()
-  "Get memory usage for UNIX systems.
-Compatible with Darwin and FreeBSD at least."
-  (let* ((command-to-mem (lambda (command)
-                           (string-to-number
+(defun eshell-info-banner--get-memory-unix-command-to-mem (command)
+  (string-to-number
+   (s-trim
+    (car (last
+          (split-string (eshell-info-banner--shell-command-to-string command)
+                        " "
+                        t))))))
+
+(defun eshell-info-banner--get-memory-netbsd ()
+  "Get memory usage for NetBSD systems.
+See `eshell-info-banner--get-memory'."
+  (let* ((total (eshell-info-banner--get-memory-unix-command-to-mem `("sysctl hw.physmem64")))
+         (used  (- total
+                   (* 1024 (string-to-number
                             (s-trim
-                             (car (last
-                                   (split-string (eshell-info-banner--shell-command-to-string command)
-                                                 " "
-                                                 t)))))))
-         (netbsdp        (and (equal system-type 'berkeley-unix)
-                              (string-match-p "NetBSD" (eshell-info-banner--shell-command-to-string "uname"))))
-         (total          (apply command-to-mem `(,(if netbsdp "sysctl hw.physmem64" "sysctl hw.physmem"))))
-         (used           (if netbsdp
-                             (- total
-                                (* 1024 (string-to-number
-                                         (s-trim
-                                          (with-temp-buffer
-                                            (insert-file-contents-literally "/proc/meminfo")
-                                            (save-match-data
-                                              (string-match (rx bol
-                                                                "MemFree:"
-                                                                (* blank)
-                                                                (group (+ digit))
-                                                                (* blank)
-                                                                "kB")
-                                                            (buffer-string))
-                                              (substring-no-properties (buffer-string)
-                                                                       (match-beginning 1)
-                                                                       (match-end 1))))))))
-                           (apply command-to-mem '("sysctl hw.usermem")))))
+                             (with-temp-buffer
+                               (insert-file-contents-literally "/proc/meminfo")
+                               (save-match-data
+                                 (string-match (rx bol
+                                                   "MemFree:"
+                                                   (* blank)
+                                                   (group (+ digit))
+                                                   (* blank)
+                                                   "kB")
+                                               (buffer-string))
+                                 (substring-no-properties (buffer-string)
+                                                          (match-beginning 1)
+                                                          (match-end 1))))))))))
     `(("RAM" ,total ,used))))
+
+(defun eshell-info-banner--get-memory-darwin ()
+  "Get memory usage for Darwin systems.
+See `eshell-info-banner--get-memory'."
+  (let* ((total  (eshell-info-banner--get-memory-unix-command-to-mem "sysctl -n hw.memsize"))
+         (vmstat (with-temp-buffer
+                   (call-process "vm_stat" nil t nil)
+                   (buffer-string)))
+         (wired  (save-match-data
+                   (string-match (rx " wired" (* (not digit)) (+ blank) (group (+ digit)) ".")
+                                 vmstat)
+                   (* 1024 4
+                      (string-to-number (substring-no-properties vmstat
+                                                                 (match-beginning 1)
+                                                                 (match-end 1))))))
+         (active (save-match-data
+                   (string-match (rx " active" (* (not digit)) (+ blank) (group (+ digit)) ".")
+                                 vmstat)
+                   (* 1024 4
+                      (string-to-number (substring-no-properties vmstat
+                                                                 (match-beginning 1)
+                                                                 (match-end 1))))))
+         (compressed (save-match-data
+                       (if (string-match (rx " occupied" (* (not digit)) (+ blank) (group (+ digit)) ".")
+                                         vmstat)
+                           (* 1024 4
+                              (string-to-number (substring-no-properties vmstat
+                                                                         (match-beginning 1)
+                                                                         (match-end 1))))
+                         0))))
+    `(("RAM" ,total ,(+ wired active compressed)))))
+
+(defun eshell-info-banner--get-memory-unix ()
+  "Get memory usage for UNIX systems."
+  (cond ((and (equal system-type 'berkeley-unix)
+              (string-match-p "NetBSD" (eshell-info-banner--shell-command-to-string "uname")))
+         (eshell-info-banner--get-memory-netbsd))
+        ((equal system-type 'darwin)
+         (eshell-info-banner--get-memory-darwin))
+        (t
+         (let* ((total (eshell-info-banner--get-memory-unix-command-to-mem "sysctl hw.physmem"))
+                (used  (eshell-info-banner--get-memory-unix-command-to-mem "sysctl hw.usermem")))
+           `(("RAM" ,total ,used))))))
 
 (defun eshell-info-banner--get-memory-windows ()
   "Get memory usage for Window."
