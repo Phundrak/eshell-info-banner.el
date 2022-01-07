@@ -219,7 +219,7 @@ argument. `executable-find'’s remote argument has the value of
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defmacro eshell-info-banner--with-face (str &rest properties)
-  "Helper macro for applying face `PROPERTIES' to `STR'."
+  "Helper macro for applying face PROPERTIES to STR."
   `(propertize ,str 'face (list ,@properties)))
 
 (defun eshell-info-banner--shell-command-to-string (command)
@@ -285,7 +285,7 @@ If the executable `uptime' is not found, return nil."
   path size used percent)
 
 (defun eshell-info-banner--get-longest-path (partitions)
-  "Return the length of the longest partition path in `PARTITIONS'.
+  "Return the length of the longest partition path in PARTITIONS.
 
 The returned value is in any case greater than
 `eshell-info-banner--min-length-left'."
@@ -295,18 +295,18 @@ The returned value is in any case greater than
                         (length (eshell-info-banner--mounted-partitions-path partition)))))))
 
 (defun eshell-info-banner--abbr-path (path &optional abbr)
-  "Remove `$HOME' from `PATH', abbreviate parent dirs if `ABBR' non nil.
+  "Remove `$HOME' from PATH, abbreviate parent dirs if ABBR non nil.
 
-Abbreviate `PATH' by removing the value of `HOME' if it is
-present in the former, and if `ABBR' is t then all parent
-directories of the current `PATH' are abbreviated to only one
-character.  If an abbreviated directory starts with a dot, then
-include it before the abbreviated name of the directory,
-e.g. \".config\" -> \".c\".
+Abbreviate PATH by removing the value of HOME if it is present in
+the former, and if ABBR is t then all parent directories of the
+current PATH are abbreviated to only one character. If an
+abbreviated directory starts with a dot, then include it before
+the abbreviated name of the directory, e.g. \".config\" ->
+\".c\".
 
-For public use, `PATH' should be a string representing a UNIX
-path.  For internal use, `PATH' can also be a list. If `PATH' is
-neither of these, an error will be thrown by the function."
+For public use, PATH should be a string representing a UNIX path.
+For internal use, PATH can also be a list. If PATH is neither of
+these, an error will be thrown by the function."
   (cond
    ((stringp path) (abbreviate-file-name
                     (if abbr
@@ -431,7 +431,7 @@ Return detected partitions as a list of structs."
          nil)))))
 
 (defun eshell-info-banner--partition-to-string (partition text-padding bar-length)
-  "Display a progress bar showing how full a `PARTITION' is.
+  "Display a progress bar showing how full a PARTITION is.
 
 For TEXT-PADDING and BAR-LENGTH, see the documentation of
 `eshell-info-banner--display-memory'."
@@ -570,16 +570,16 @@ in bytes."
 (defun eshell-info-banner--memory-to-string (type total used text-padding bar-length)
   "Display a memory’s usage with a progress bar.
 
-The `TYPE' of memory will be the text on the far left, while
-`USED' and `TOTAL' will be displayed on the right of the progress
-bar.  From them, a percentage will be computed which will be used
-to display a colored percentage of the progress bar and it will
-be displayed on the far right.
+The TYPE of memory will be the text on the far left, while USED
+and TOTAL will be displayed on the right of the progress bar.
+From them, a percentage will be computed which will be used to
+display a colored percentage of the progress bar and it will be
+displayed on the far right.
 
-`TEXT-PADDING' will determine how many dots are necessary between
-`TYPE' and the colon.
+TEXT-PADDING will determine how many dots are necessary between
+TYPE and the colon.
 
-`BAR-LENGTH' determines the length of the progress bar to be
+BAR-LENGTH determines the length of the progress bar to be
 displayed."
   (concat (s-pad-right text-padding "." type)
           ": "
@@ -595,10 +595,10 @@ bars will have this appearance:
 
 TYPE......: [=========] XXG / XXG  (XX%)
 
-`TEXT-PADDING': the space allocated to the text at the left of the
+TEXT-PADDING: the space allocated to the text at the left of the
 progress bar.
 
-`BAR-LENGTH': the length of the progress bar."
+BAR-LENGTH: the length of the progress bar."
   (mapconcat (lambda (mem)
                (eshell-info-banner--memory-to-string (nth 0 mem) (nth 1 mem)
                                                      (nth 2 mem) text-padding
@@ -610,7 +610,7 @@ progress bar.
                                         ; Display information ;;;;;;;;;;;;;;;;;
 
 (defun eshell-info-banner--get-color-percentage (percentage)
-  "Display a `PERCENTAGE' with its according face."
+  "Display a PERCENTAGE with its according face."
   (let ((percentage (if (stringp percentage)
                         (string-to-number percentage)
                       percentage)))
@@ -622,12 +622,12 @@ progress bar.
      (t 'eshell-info-banner-normal-face))))
 
 (defun eshell-info-banner--progress-bar (length percentage &optional invert)
-  "Display a progress bar `LENGTH' long and `PERCENTAGE' full.
+  "Display a progress bar LENGTH long and PERCENTAGE full.
 The full path will be displayed filled with the character
 specified by `eshell-info-banner-progress-bar-char' up to
-`PERCENTAGE' percents.  The rest will be empty.
+PERCENTAGE percents.  The rest will be empty.
 
-If `INVERT' is t, then consider the percentage to approach
+If INVERT is t, then consider the percentage to approach
 critical levels close to 0 rather than 100."
   (let* ((length-filled     (if (= 0 percentage)
                                 0
@@ -649,9 +649,9 @@ critical levels close to 0 rather than 100."
 (defun eshell-info-banner--display-battery (text-padding bar-length)
   "If the computer has a battery, display its level.
 
-Pad the left text with dots by `TEXT-PADDING' characters.
+Pad the left text with dots by TEXT-PADDING characters.
 
-`BAR-LENGTH' indicates the length in characters of the progress
+BAR-LENGTH indicates the length in characters of the progress
 bar.
 
 The usage of `eshell-info-banner-warning-percentage' and
