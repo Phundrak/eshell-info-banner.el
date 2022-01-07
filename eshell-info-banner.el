@@ -237,7 +237,9 @@ Ensures the command is ran with LANG=C."
   "Display a progress bar without its prefix.
 Display a progress bar of BAR-LENGTH length, followed by an
 indication of how full the memory is with a human readable USED
-and TOTAL size."
+and TOTAL size.
+Optional argument NEWLINE: Whether to output a newline at the end
+of the progress bar."
   (let ((percentage (if (= used 0)
                         0
                       (/ (* 100 used) total))))
@@ -468,6 +470,8 @@ For TEXT-PADDING and BAR-LENGTH, see the documentation of
                         t)))
 
 (defun eshell-info-banner--get-memory-unix-command-to-mem (command)
+  "Get the output of COMMAND corresponding to memory information.
+This function is to be only used on platforms which support sysctl."
   (string-to-number
    (s-trim
     (car (last
