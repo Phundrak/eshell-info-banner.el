@@ -2,8 +2,8 @@
 
 ;; Author: Lucien Cartier-Tilet <lucien@phundrak.com>
 ;; Maintainer: Lucien Cartier-Tilet <lucien@phundrak.com>
-;; Version: 0.8.4
-;; Package-Requires: ((emacs "25.1") (f "0.20") (s "1"))
+;; Version: 0.8.5
+;; Package-Requires: ((emacs "25.1") (s "1"))
 ;; Homepage: https://github.com/Phundrak/eshell-info-banner.el
 
 ;; This file is not part of GNU Emacs
@@ -59,6 +59,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
                                         ;              Constants              ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defconst eshell-info-banner-path-separator
+  (substring-no-properties (file-relative-name (expand-file-name "x" "y")) 1 2)
+  "File separator used by the current operating system.")
 
 (defconst eshell-info-banner--min-length-left 8
   "Minimum length of text on the left hand side of the banner.")
@@ -308,21 +312,30 @@ For public use, PATH should be a string representing a UNIX path.
 For internal use, PATH can also be a list. If PATH is neither of
 these, an error will be thrown by the function."
   (cond
-   ((stringp path) (abbreviate-file-name
-                    (if abbr
-                        (eshell-info-banner--abbr-path
-                         (f-split (eshell-info-banner--abbr-path path)))
-                      path)))
+   ((stringp path)
+    (let ((abbr-path (abbreviate-file-name path)))
+      (if abbr
+          (abbreviate-file-name
+           (eshell-info-banner--abbr-path
+            (split-string abbr-path eshell-info-banner-path-separator t)))
+        abbr-path)))
    ((null path) "")
    ((listp path)
-    (f-join (if (= (length path) 1)
-                (car path)
-              (let* ((dir        (car path))
-                     (first-char (substring dir 0 1)))
-                (if (string= "." first-char)
-                    (substring dir 0 2)
-                  first-char)))
-            (eshell-info-banner--abbr-path (cdr path))))
+    (let ((file (eshell-info-banner--abbr-path (cdr path)))
+          (directory (if (= (length path) 1)
+                         (car path)
+                       (let* ((dir        (car path))
+                              (first-char (substring dir 0 1)))
+                         (if (string= "." first-char)
+                             (substring dir 0 2)
+                           first-char)))))
+       (if (string= "" file)
+           directory
+         (let ((relative-p (not (file-name-absolute-p directory)))
+               (new-dir    (expand-file-name file directory)))
+           (if relative-p
+               (file-relative-name new-dir)
+             new-dir)))))
    (t (error "Invalid argument %s, neither stringp or listp" path))))
 
 (defun eshell-info-banner--get-mounted-partitions-duf ()
