@@ -2,7 +2,7 @@
 
 ;; Author: Lucien Cartier-Tilet <lucien@phundrak.com>
 ;; Maintainer: Lucien Cartier-Tilet <lucien@phundrak.com>
-;; Version: 0.8.5
+;; Version: 0.8.6
 ;; Package-Requires: ((emacs "25.1") (s "1"))
 ;; Homepage: https://github.com/Phundrak/eshell-info-banner.el
 
@@ -60,9 +60,10 @@
                                         ;              Constants              ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defconst eshell-info-banner-path-separator
-  (substring-no-properties (file-relative-name (expand-file-name "x" "y")) 1 2)
-  "File separator used by the current operating system.")
+(eval-when-compile
+  (defconst eshell-info-banner-path-separator
+    (substring-no-properties (file-relative-name (expand-file-name "x" "y")) 1 2)
+    "File separator used by the current operating system."))
 
 (defconst eshell-info-banner--min-length-left 8
   "Minimum length of text on the left hand side of the banner.")
