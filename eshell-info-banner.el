@@ -2,7 +2,7 @@
 
 ;; Author: Lucien Cartier-Tilet <lucien@phundrak.com>
 ;; Maintainer: Lucien Cartier-Tilet <lucien@phundrak.com>
-;; Version: 0.8.3
+;; Version: 0.8.4
 ;; Package-Requires: ((emacs "25.1") (f "0.20") (s "1"))
 ;; Homepage: https://github.com/Phundrak/eshell-info-banner.el
 
@@ -482,7 +482,7 @@ This function is to be only used on platforms which support sysctl."
 (defun eshell-info-banner--get-memory-netbsd ()
   "Get memory usage for NetBSD systems.
 See `eshell-info-banner--get-memory'."
-  (let* ((total (eshell-info-banner--get-memory-unix-command-to-mem `("sysctl hw.physmem64")))
+  (let* ((total (eshell-info-banner--get-memory-unix-command-to-mem "sysctl hw.physmem64"))
          (used  (- total
                    (* 1024 (string-to-number
                             (s-trim
