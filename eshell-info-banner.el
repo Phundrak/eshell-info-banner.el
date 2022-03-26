@@ -2,7 +2,7 @@
 
 ;; Author: Lucien Cartier-Tilet <lucien@phundrak.com>
 ;; Maintainer: Lucien Cartier-Tilet <lucien@phundrak.com>
-;; Version: 0.8.6
+;; Version: 0.8.7
 ;; Package-Requires: ((emacs "25.1") (s "1"))
 ;; Homepage: https://github.com/Phundrak/eshell-info-banner.el
 
@@ -69,33 +69,25 @@
 
 (eval-when-compile
   (defconst eshell-info-banner--macos-versions
-    '(("10.0"  . "Mac OS X Cheetah")
-      ("10.1"  . "Mac OS X Puma")
-      ("10.2"  . "Mac OS X Jaguar")
-      ("10.3"  . "Mac OS X Panther")
-      ("10.4"  . "Mac OS X Tiger")
-      ("10.5"  . "Mac OS X Leopard")
-      ("10.6"  . "Mac OS X Snow Leopard")
-      ("10.7"  . "Mac OS X Lion")
-      ("10.8"  . "OS X Mountain Lion")
-      ("10.9"  . "OS X Mavericks")
-      ("10.10" . "OS X Yosemite")
-      ("10.11" . "OS X El Capitan")
-      ("10.12" . "macOS Sierra")
-      ("10.13" . "macOS High Sierra")
-      ("10.14" . "macOS Mojave")
-      ("10.15" . "macOS Catalina")
-      ("10.16" . "macOS Big Sur")
-      ("11.0"  . "macOS Big Sur")
-      ("11.1"  . "macOS Big Sur")
-      ("11.2"  . "macOS Big Sur")
-      ("11.3"  . "macOS Big Sur")
-      ("11.4"  . "macOS Big Sur")
-      ("11.5"  . "macOS Big Sur")
-      ("11.6"  . "macOS Big Sur")
-      ("12.0"  . "macOS Monterey")
-      ("12.1"  . "macOS Monterey")
-      ("12.2"  . "macOS Monterey"))
+    '(("^10\\.0\\."  . "Mac OS X Cheetah")
+      ("^10\\.1\\."  . "Mac OS X Puma")
+      ("^10\\.2\\."  . "Mac OS X Jaguar")
+      ("^10\\.3\\."  . "Mac OS X Panther")
+      ("^10\\.4\\."  . "Mac OS X Tiger")
+      ("^10\\.5\\."  . "Mac OS X Leopard")
+      ("^10\\.6\\."  . "Mac OS X Snow Leopard")
+      ("^10\\.7\\."  . "Mac OS X Lion")
+      ("^10\\.8\\."  . "OS X Mountain Lion")
+      ("^10\\.9\\."  . "OS X Mavericks")
+      ("^10\\.10\\." . "OS X Yosemite")
+      ("^10\\.11\\." . "OS X El Capitan")
+      ("^10\\.12\\." . "macOS Sierra")
+      ("^10\\.13\\." . "macOS High Sierra")
+      ("^10\\.14\\." . "macOS Mojave")
+      ("^10\\.15\\." . "macOS Catalina")
+      ("^10\\.16\\." . "macOS Big Sur")
+      ("^11\\."      . "macOS Big Sur")
+      ("^12\\."      . "macOS Monterey"))
     "Versions of OSX and macOS and their name."))
 
 (defconst eshell-info-banner--posix-shells '("bash" "zsh" "sh")
@@ -795,9 +787,9 @@ If RELEASE-FILE is nil, use '/etc/os-release'."
   "Get the name of the current macOS or OSX system based on its VERSION."
   `(cond
     ,@(mapcar (lambda (major)
-               `((string-match-p (regexp-quote ,(car major))
-                                 ,version)
-                 ,(cdr major)))
+                `((string-match-p ,(car major)
+                                  ,version)
+                  ,(cdr major)))
               eshell-info-banner--macos-versions)
     (t "unknown version")))
 
