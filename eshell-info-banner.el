@@ -102,49 +102,42 @@
   "Make `eshell-info-banner' TRAMP aware."
   :group 'eshell-info-banner
   :type 'boolean
-  :safe #'booleanp
-  :version "0.3.0")
+  :safe #'booleanp)
 
 (defcustom eshell-info-banner-shorten-path-from 7
   "From which length should a path be shortened?"
   :group 'eshell-info-banner
   :type 'integer
-  :safe #'integer-or-marker-p
-  :version "0.1.0")
+  :safe #'integer-or-marker-p)
 
 (defcustom eshell-info-banner-width 80
   "Width of the info banner to be shown in Eshell."
   :group 'eshell-info-banner
   :type 'integer
-  :safe #'integer-or-marker-p
-  :version "0.1.0")
+  :safe #'integer-or-marker-p)
 
 (defcustom eshell-info-banner-progress-bar-char "="
   "Character to fill the progress bars with."
   :group 'eshell-info-banner
   :type 'string
-  :safe #'stringp
-  :version "0.1.0")
+  :safe #'stringp)
 
 (defcustom eshell-info-banner-warning-percentage 75
   "When to warn about a percentage."
   :group 'eshell-info-banner
   :type 'float
-  :safe #'floatp
-  :version "0.1.0")
+  :safe #'floatp)
 
 (defcustom eshell-info-banner-critical-percentage 90
   "When a percentage becomes critical."
   :group 'eshell-info-banner
   :type 'float
-  :safe #'floatp
-  :version "0.1.0")
+  :safe #'floatp)
 
 (defcustom eshell-info-banner-partition-prefixes '("/dev")
   "List of prefixes for detecting which partitions to display."
   :group 'eshell-info-banner
-  :type 'list
-  :version "0.3.0")
+  :type 'list)
 
 (defun eshell-info-banner--executable-find (program)
   "Find PROGRAM executable, possibly on a remote machine.
@@ -163,8 +156,7 @@ argument. `executable-find'’s remote argument has the value of
   "Path to the `duf' executable."
   :group 'eshell-info-banner
   :type 'string
-  :safe #'stringp
-  :version "0.5.0")
+  :safe #'stringp)
 
 (defcustom eshell-info-banner-use-duf
   (if (eshell-info-banner--executable-find eshell-info-banner-duf-executable)
@@ -173,16 +165,14 @@ argument. `executable-find'’s remote argument has the value of
   "If non-nil, use `duf' instead of `df'."
   :group 'eshell-info-banner
   :type 'boolean
-  :safe #'booleanp
-  :version "0.5.0")
+  :safe #'booleanp)
 
 (defcustom eshell-info-banner-file-size-flavor nil
   "Display sizes with IEC prefixes."
   :group 'eshell-info-banner
   :type '(radio (const :tag "Default" nil)
                 (const :tag "SI" si)
-                (const :tag "IEC" iec))
-  :version "0.8.0")
+                (const :tag "IEC" iec)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
