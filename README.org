@@ -189,10 +189,9 @@ line if you have one. If you don’t have a battery, the only difference
 is you will have one less line than laptop users.
 
 * Advice for Windows users
-Currently, the partitions detection is done only with the ~duf~
-command-line utility. If you want a list of your partitions, I
-strongly encourage you to install it on your system. See
-[[https://github.com/muesli/duf#windows]].
+Currently, ~eshell-info-banner~ can only look for your partitions with
+~duf~. If you want a list of your partitions, I strongly encourage you
+to install it on your system. See [[https://github.com/muesli/duf#windows][muesli/duf]].
 
 * Contributing
 See [[file:CONTRIBUTING.org]].
