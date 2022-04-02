@@ -240,6 +240,14 @@ of the progress bar."
                      :inherit (eshell-info-banner--get-color-percentage percentage))
                     (if newline "\n" "")))))
 
+(defun eshell-info-banner--string-repeat (str times)
+  "Repeat STR for TIMES times."
+  (declare (pure t) (side-effect-free t))
+  (let (result)
+    (cl-dotimes (_ times)
+      (setq result (cons str result)))
+    (apply #'concat result)))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
                                         ;          Internal functions         ;
@@ -633,10 +641,12 @@ critical levels close to 0 rather than 100."
                              percentage)))
     (concat
      (eshell-info-banner--with-face "[" :weight 'bold)
-     (eshell-info-banner--with-face (s-repeat length-filled eshell-info-banner-progress-bar-char)
+     (eshell-info-banner--with-face (eshell-info-banner--string-repeat eshell-info-banner-progress-bar-char
+                                                                       length-filled)
                                     :weight 'bold
                                     :inherit (eshell-info-banner--get-color-percentage percentage-level))
-     (eshell-info-banner--with-face (s-repeat length-empty eshell-info-banner-progress-bar-char)
+     (eshell-info-banner--with-face (eshell-info-banner--string-repeat eshell-info-banner-progress-bar-char
+                                                                       length-empty)
                                     :weight 'bold
                                     :inherit 'eshell-info-banner-background-face)
      (eshell-info-banner--with-face "]" :weight 'bold))))
@@ -671,7 +681,9 @@ the warning face with a battery level of 25% or less."
                 (eshell-info-banner--progress-bar bar-length
                                                   percentage
                                                   t)
-                (s-repeat (if (equal eshell-info-banner-file-size-flavor 'iec) 21 17) " ")
+                (eshell-info-banner--string-repeat
+                 " "
+                 (if (equal eshell-info-banner-file-size-flavor 'iec) 21 17))
                 (format "(%3s%%)\n"
                         (eshell-info-banner--with-face
                          (number-to-string percentage)
@@ -838,7 +850,8 @@ build number)."
          (bar-length         (if (equal eshell-info-banner-file-size-flavor 'iec)
                                  (- bar-length 4)
                                bar-length)))
-    (concat (format "%s\n" (s-repeat tot-width eshell-info-banner-progress-bar-char))
+    (concat (format "%s\n" (eshell-info-banner--string-repeat eshell-info-banner-progress-bar-char
+                                                              tot-width))
             (format "%s: %s Kernel.: %s\n"
                     (s-pad-right left-padding
                                  "."
@@ -852,7 +865,8 @@ build number)."
             (eshell-info-banner--display-battery left-padding bar-length)
             (eshell-info-banner--display-memory left-padding bar-length)
             (eshell-info-banner--display-partitions left-padding bar-length)
-            (format "\n%s\n" (s-repeat tot-width eshell-info-banner-progress-bar-char)))))
+            (format "\n%s\n" (eshell-info-banner--string-repeat eshell-info-banner-progress-bar-char
+                                                                tot-width)))))
 
 ;;;###autoload
 (defun eshell-info-banner-update-banner ()
