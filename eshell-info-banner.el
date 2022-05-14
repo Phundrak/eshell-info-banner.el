@@ -365,15 +365,15 @@ Common function between
 otherwise differ solely on the position of the mount point in the
 partition list. Its position is given by the argument
 MOUNT-POSITION."
-  (let ((partitions (cdr (split-string (eshell-info-banner--shell-command-to-string "df -l")
+  (let ((partitions (cdr (split-string (eshell-info-banner--shell-command-to-string "df -l -k")
                                        (regexp-quote "\n")
                                        t))))
     (cl-remove-if #'null
                   (mapcar (lambda (partition)
                             (let* ((partition  (split-string partition " " t))
                                    (filesystem (nth 0 partition))
-                                   (size       (string-to-number (nth 1 partition)))
-                                   (used       (string-to-number (nth 2 partition)))
+                                   (size       (* (string-to-number (nth 1 partition)) 1024))
+                                   (used       (* (string-to-number (nth 2 partition)) 1024))
                                    (percent    (nth 4 partition))
                                    (mount      (nth mount-position partition)))
                               (when (seq-some (lambda (prefix)
