@@ -216,8 +216,9 @@ Ensures the command is ran with LANG=C."
                             eshell-info-banner--posix-shells)
                   "sh")))
     (with-temp-buffer
-      (call-process shell nil t nil "-c" (concat "LANG=C " command))
-      (buffer-string))))
+      (let ((default-directory (if eshell-info-banner-tramp-aware default-directory "~")))
+        (process-file shell nil t nil "-c" (concat "LANG=C " command))
+        (buffer-string)))))
 
 (defun eshell-info-banner--progress-bar-without-prefix (bar-length used total &optional newline)
   "Display a progress bar without its prefix.
