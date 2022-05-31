@@ -38,7 +38,7 @@
 ;;; Code:
 
 (require 'cl-lib)
-(require 'f)
+(require 's)
 (require 'em-banner)
 (require 'json)
 (require 'seq)
