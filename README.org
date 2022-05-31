@@ -3,6 +3,7 @@
 #+email: lucien@phundrak.com
 [[https://melpa.org/#/eshell-info-banner][file:https://melpa.org/packages/eshell-info-banner-badge.svg]]
 [[https://stable.melpa.org/#/eshell-info-banner][file:https://stable.melpa.org/packages/eshell-info-banner-badge.svg]]
+[[https://github.com/Phundrak/eshell-info-banner.el/actions/workflows/workflow.yml][file:https://github.com/Phundrak/eshell-info-banner.el/actions/workflows/workflow.yml/badge.svg]]
 
 * Introduction
 ~eshell-info-banner.el~ is a utility for creating an informative banner,

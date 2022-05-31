@@ -139,18 +139,19 @@
   :group 'eshell-info-banner
   :type 'list)
 
-(defun eshell-info-banner--executable-find (program)
+
+(defmacro eshell-info-banner--executable-find (program)
   "Find PROGRAM executable, possibly on a remote machine.
 This is a wrapper around `executable-find' in order to avoid
 issues with older versions of the functions only accepting one
 argument. `executable-find'’s remote argument has the value of
 `eshell-info-banner-tramp-aware'."
   (if (version< emacs-version "27.1")
-      (let ((default-directory (if eshell-info-banner-tramp-aware
-                                   default-directory
-                                 "~")))
-        (executable-find program))
-    (executable-find program eshell-info-banner-tramp-aware)))
+      `(let ((default-directory (if eshell-info-banner-tramp-aware
+                                    default-directory
+                                  "~")))
+         (executable-find ,program))
+    `(executable-find ,program eshell-info-banner-tramp-aware)))
 
 (defcustom eshell-info-banner-duf-executable "duf"
   "Path to the `duf' executable."
@@ -265,13 +266,13 @@ If the executable `uptime' is not found, return nil."
       (if (not (seq-some (lambda (keyword)
                            (string-match-p keyword uptime-str))
                          '("invalid" "illegal" "unknown")))
-          (s-chop-prefix "up " (string-trim uptime-str))
+          (s-chop-prefix "up " (s-trim uptime-str))
         (let ((uptime-str (eshell-info-banner--shell-command-to-string "uptime")))
           (save-match-data
             (string-match "[^,]+up *\\([^,]+\\)," uptime-str)
-            (string-trim (substring-no-properties uptime-str
-                                                  (match-beginning 1)
-                                                  (match-end 1)))))))))
+            (s-trim (substring-no-properties uptime-str
+                                             (match-beginning 1)
+                                             (match-end 1)))))))))
 
                                         ; Partitions ;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -387,7 +388,7 @@ MOUNT-POSITION."
                                  :size size
                                  :used used
                                  :percent (string-to-number
-                                           (string-trim-left percent (regexp-quote "%")))))))
+                                           (s-chop-suffix "%" percent))))))
                           partitions))))
 
 (defun eshell-info-banner--get-mounted-partitions-gnu ()
@@ -477,7 +478,7 @@ For TEXT-PADDING and BAR-LENGTH, see the documentation of
   "Get the output of COMMAND corresponding to memory information.
 This function is to be only used on platforms which support sysctl."
   (string-to-number
-   (string-trim
+   (s-trim
     (car (last
           (split-string (eshell-info-banner--shell-command-to-string command)
                         " "
@@ -489,7 +490,7 @@ See `eshell-info-banner--get-memory'."
   (let* ((total (eshell-info-banner--get-memory-unix-command-to-mem "sysctl hw.physmem64"))
          (used  (- total
                    (* 1024 (string-to-number
-                            (string-trim
+                            (s-trim
                              (with-temp-buffer
                                (insert-file-contents-literally "/proc/meminfo")
                                (save-match-data
@@ -733,9 +734,9 @@ If RELEASE-FILE is nil, use '/etc/os-release'."
   (let ((os (eshell-info-banner--get-os-information-from-registry)))
     (save-match-data
       (string-match "\\([^()]+\\) *(\\([^()]+\\))" os)
-      `(,(string-trim (substring-no-properties os
-                                               (match-beginning 1)
-                                               (match-end 1)))
+      `(,(s-trim (substring-no-properties os
+                                          (match-beginning 1)
+                                          (match-end 1)))
         .
         ,(substring-no-properties os
                                   (match-beginning 2)
@@ -747,9 +748,9 @@ If RELEASE-FILE is nil, use '/etc/os-release'."
     `(,(cond
         ;; Bedrock Linux
         ((file-exists-p (concat prefix "/bedrock/etc/bedrock-release"))
-         (string-trim (with-temp-buffer
-                        (insert-file-contents (concat prefix "/bedrock/etc/bedrock-release"))
-                        (buffer-string))))
+         (s-trim (with-temp-buffer
+                   (insert-file-contents (concat prefix "/bedrock/etc/bedrock-release"))
+                   (buffer-string))))
         ;; Proxmox
         ((eshell-info-banner--executable-find "pveversion")
          (let ((distro (eshell-info-banner--shell-command-to-string "pveversion")))
@@ -775,16 +776,16 @@ If RELEASE-FILE is nil, use '/etc/os-release'."
                                               (match-end 1))))))
         ((equal system-type 'gnu/kfreebsd)
          (let* ((default-directory (if eshell-info-banner-tramp-aware default-directory "~")))
-           (string-trim (with-temp-buffer
-                          (process-file "uname" nil t nil "-s")
-                          (buffer-string)))))
+           (s-trim (with-temp-buffer
+                     (process-file "uname" nil t nil "-s")
+                     (buffer-string)))))
         ((and (file-exists-p (concat prefix "/system/app"))
               (file-exists-p (concat prefix "/system/priv-app")))
          (concat "Android "
-                 (string-trim (eshell-info-banner--shell-command-to-string "getprop ro.build.version.release"))))
+                 (s-trim (eshell-info-banner--shell-command-to-string "getprop ro.build.version.release"))))
         (t "Unknown"))
       .
-      ,(string-trim (eshell-info-banner--shell-command-to-string "uname -rs")))))
+      ,(s-trim (eshell-info-banner--shell-command-to-string "uname -rs")))))
 
 (defmacro eshell-info-banner--get-macos-name (version)
   "Get the name of the current macOS or OSX system based on its VERSION."
@@ -799,10 +800,10 @@ If RELEASE-FILE is nil, use '/etc/os-release'."
 (defun eshell-info-banner--get-os-information-darwin ()
   "See `eshell-info-banner--get-os-information'."
   `(,(eshell-info-banner--get-macos-name
-      (string-trim
+      (s-trim
        (eshell-info-banner--shell-command-to-string "sw_vers -productVersion")))
     .
-    ,(string-trim (eshell-info-banner--shell-command-to-string "uname -rs"))))
+    ,(s-trim (eshell-info-banner--shell-command-to-string "uname -rs"))))
 
 (defun eshell-info-banner--get-os-information ()
   "Get operating system identifying information.
