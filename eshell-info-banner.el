@@ -147,6 +147,14 @@ size and amount of space used."
   :group 'eshell-info-banner
   :type 'boolean)
 
+(defcustom eshell-info-banner-exclude-partitions nil
+  "List of patterns to exclude from the partition list.
+
+Patterns are matched against the partition name with
+`string-match-p'."
+  :group 'eshell-info-banner
+  :type '(repeat string))
+
 (defmacro eshell-info-banner--executable-find (program)
   "Find PROGRAM executable, possibly on a remote machine.
 This is a wrapper around `executable-find' in order to avoid
@@ -445,8 +453,8 @@ Return detected partitions as a list of structs."
 (defun eshell-info-banner--get-mounted-partitions ()
   "Detect mounted partitions on the system.
 
-Take `eshell-info-banner-filter-duplicate-partitions' into
-account."
+Take `eshell-info-banner-filter-duplicate-partitions' and
+`eshell-info-banner-exclude-partitions' into account."
   (let ((partitions (eshell-info-banner--get-mounted-partitions-1)))
     (when eshell-info-banner-filter-duplicate-partitions
       (setq partitions
@@ -458,6 +466,16 @@ account."
                              (eshell-info-banner--mounted-partitions-used partition))
                      unless (member signature used)
                      collect partition and do (push signature used))))
+    (when eshell-info-banner-exclude-partitions
+      (setq partitions
+            (seq-filter (lambda (partition)
+                          (let ((path (eshell-info-banner--mounted-partitions-path
+                                       partition)))
+                            (not (seq-some
+                                  (lambda (pattern)
+                                    (string-match-p pattern path))
+                                  eshell-info-banner-exclude-partitions))))
+                        partitions)))
     partitions))
 
 (defun eshell-info-banner--partition-to-string (partition text-padding bar-length)
