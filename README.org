@@ -109,6 +109,15 @@ A couple of variables can be edited by the user in order to configure
   set its value to ~("/dev" "zroot")~.
 
   Default value: ~("/dev")~
+- ~eshell-info-banner-filter-duplicate-partitions~ :: Try to filter
+  out duplicate partitions. Two partitions are considered duplicate if
+  they have the same size and amount of space used.
+
+  Default value: ~nil~
+- ~eshell-info-banner-exclude-partitions~ :: List of pattens to exclude
+  from the partition list.
+
+  Default value: ~nil~
 - ~eshell-info-banner-shorten-path-from~ :: Maximum length of the mount
   path of a partition before it gets abbreviated. Set it to ridiculous
   numbers in order to disable it (something like ~1000~ should be more
