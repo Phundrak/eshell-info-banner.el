@@ -139,6 +139,13 @@
   :group 'eshell-info-banner
   :type 'list)
 
+(defcustom eshell-info-banner-filter-duplicate-partitions nil
+  "Whether to filter duplicate partitions.
+
+Two partitions are considered duplicate if they have the same
+size and amount of space used."
+  :group 'eshell-info-banner
+  :type 'boolean)
 
 (defmacro eshell-info-banner--executable-find (program)
   "Find PROGRAM executable, possibly on a remote machine.
@@ -417,23 +424,41 @@ Return detected partitions as a list of structs.  See
 chosen.  Relies on the `df' command."
   (eshell-info-banner--get-mounted-partitions-df 8))
 
-(defun eshell-info-banner--get-mounted-partitions ()
+(defun eshell-info-banner--get-mounted-partitions-1 ()
   "Detect mounted partitions on the system.
 
 Return detected partitions as a list of structs."
   (if eshell-info-banner-use-duf
       (eshell-info-banner--get-mounted-partitions-duf)
     (pcase system-type
-       ((or 'gnu 'gnu/linux 'gnu/kfreebsd 'berkeley-unix)
-        (eshell-info-banner--get-mounted-partitions-gnu))
-       ((or 'ms-dos 'windows-nt 'cygwin)
-        (eshell-info-banner--get-mounted-partitions-windows))
-       ('darwin
-        (eshell-info-banner--get-mounted-partitions-darwin))
-       (other
-        (progn
+      ((or 'gnu 'gnu/linux 'gnu/kfreebsd 'berkeley-unix)
+       (eshell-info-banner--get-mounted-partitions-gnu))
+      ((or 'ms-dos 'windows-nt 'cygwin)
+       (eshell-info-banner--get-mounted-partitions-windows))
+      ('darwin
+       (eshell-info-banner--get-mounted-partitions-darwin))
+      (other
+       (progn
          (warn "Partition detection for %s not yet supported." other)
          nil)))))
+
+(defun eshell-info-banner--get-mounted-partitions ()
+  "Detect mounted partitions on the system.
+
+Take `eshell-info-banner-filter-duplicate-partitions' into
+account."
+  (let ((partitions (eshell-info-banner--get-mounted-partitions-1)))
+    (when eshell-info-banner-filter-duplicate-partitions
+      (setq partitions
+            (cl-loop for partition in partitions
+                     with used = nil
+                     for signature =
+                     (format "%d-%d"
+                             (eshell-info-banner--mounted-partitions-size partition)
+                             (eshell-info-banner--mounted-partitions-used partition))
+                     unless (member signature used)
+                     collect partition and do (push signature used))))
+    partitions))
 
 (defun eshell-info-banner--partition-to-string (partition text-padding bar-length)
   "Display a progress bar showing how full a PARTITION is.
