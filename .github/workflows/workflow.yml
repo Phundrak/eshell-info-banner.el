@@ -9,13 +9,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        fast-fail: false
         os:
           - ubuntu-latest
           - macos-latest
         emacs-version:
-          - 25.1
-          - 25.2
-          - 25.3
           - 26.1
           - 26.2
           - 26.3
