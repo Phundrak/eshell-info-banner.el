@@ -8,7 +8,7 @@ jobs:
   test:
     runs-on: ${{ matrix.os }}
     strategy:
-      fast-fail: false
+      fail-fast: false
       matrix:
         os:
           - ubuntu-latest
