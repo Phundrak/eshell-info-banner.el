@@ -38,5 +38,9 @@ jobs:
         with:
           path: .eask
           key: cache-eask-packages
-      - name: "Run tests"
-        run: make all
+      - name: "Install"
+        run: make install
+      - name: "Compile"
+        run: make compile
+      - name: "Lint"
+        run: make lint
