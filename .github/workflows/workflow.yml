@@ -5,12 +5,15 @@ on:
   workflow_dispatch:
 
 jobs:
-  check-compatibility:
-    runs-on: ubuntu-latest
+  test:
+    runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false
       matrix:
-        emacs_version:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+        emacs-version:
           - 25.1
           - 25.2
           - 25.3
@@ -21,26 +24,22 @@ jobs:
           - 27.2
           - 28.1
           - snapshot
+
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2
       - uses: purcell/setup-emacs@master
         with:
-          version: ${{ matrix.emacs_version }}
-      - uses: actions/cache@v2
-        id: cache-cask-packages
+          version: ${{ matrix.emacs-version }}
+      - uses: actions/setup-node@v2
         with:
-          path: .cask
-          key: cache-cask-packages-000
-      - uses: actions/cache@v2
-        id: cache-cask-executable
+          node-version: '16'
+      - uses: emacs-eask/setup-eask@master
         with:
-          path: ~/.cask
-          key: cache-cask-executable-000
-      - name: "Cask setup"
-        uses: cask/setup-cask@master
-        if: steps.cask-cache-executable.outputs.cache-hit != 'true'
-      - name: "Install Cask dependencies"
-        run: cask install
-        if: steps.cask-cache-executable.outputs.cache-hit != 'true'
-      - name: "Check version compatibility"
+          version: 'snapshot'
+      - uses: actions/cache@v2
+        id: cache-eask-packages-000
+        with:
+          path: .eask
+          key: cache-eask-packages
+      - name: "Run tests"
         run: make all

@@ -5,6 +5,7 @@
 ;; Version: 0.8.8
 ;; Package-Requires: ((emacs "25.1") (s "1"))
 ;; Homepage: https://github.com/Phundrak/eshell-info-banner.el
+;; Keywords: terminals
 
 ;; This file is not part of GNU Emacs
 
@@ -159,7 +160,7 @@ Patterns are matched against the partition name with
   "Find PROGRAM executable, possibly on a remote machine.
 This is a wrapper around `executable-find' in order to avoid
 issues with older versions of the functions only accepting one
-argument. `executable-find'’s remote argument has the value of
+argument.  `executable-find'’s remote argument has the value of
 `eshell-info-banner-tramp-aware'."
   (if (version< emacs-version "27.1")
       `(let ((default-directory (if eshell-info-banner-tramp-aware
@@ -228,9 +229,9 @@ argument. `executable-find'’s remote argument has the value of
   "Execute shell command COMMAND and return its output as a string.
 Ensures the command is ran with LANG=C."
   (let ((shell (or (seq-find (lambda (shell)
-                              (eshell-info-banner--executable-find shell))
-                            eshell-info-banner--posix-shells)
-                  "sh")))
+                               (eshell-info-banner--executable-find shell))
+                             eshell-info-banner--posix-shells)
+                   "sh")))
     (with-temp-buffer
       (let ((default-directory (if eshell-info-banner-tramp-aware default-directory "~")))
         (process-file shell nil t nil "-c" (concat "LANG=C " command))
@@ -310,7 +311,7 @@ The returned value is in any case greater than
 
 Abbreviate PATH by removing the value of HOME if it is present in
 the former, and if ABBR is t then all parent directories of the
-current PATH are abbreviated to only one character. If an
+current PATH are abbreviated to only one character.  If an
 abbreviated directory starts with a dot, then include it before
 the abbreviated name of the directory, e.g. \".config\" ->
 \".c\".
@@ -336,43 +337,43 @@ these, an error will be thrown by the function."
                          (if (string= "." first-char)
                              (substring dir 0 2)
                            first-char)))))
-       (if (string= "" file)
-           directory
-         (let ((relative-p (not (file-name-absolute-p directory)))
-               (new-dir    (expand-file-name file directory)))
-           (if relative-p
-               (file-relative-name new-dir)
-             new-dir)))))
+      (if (string= "" file)
+          directory
+        (let ((relative-p (not (file-name-absolute-p directory)))
+              (new-dir    (expand-file-name file directory)))
+          (if relative-p
+              (file-relative-name new-dir)
+            new-dir)))))
    (t (error "Invalid argument %s, neither stringp or listp" path))))
 
 (defun eshell-info-banner--get-mounted-partitions-duf ()
-    "Detect mounted partitions on systems supporting `duf'.
+  "Detect mounted partitions on systems supporting `duf'.
 
-Return detected partitions as a list of structs. See
+Return detected partitions as a list of structs.  See
 `eshell-info-banner-partition-prefixes' to see how partitions are
-chosen. Relies on the `duf' command."
-    (let* ((partitions (json-read-from-string (with-temp-buffer
-                                                (call-process "duf" nil t nil "-json")
-                                                (buffer-string))))
-           (partitions (cl-remove-if-not (lambda (partition)
-                                           (let ((device (format "%s" (cdr (assoc 'device partition)))))
-                                             (seq-some (lambda (prefix)
-                                                         (string-prefix-p prefix device t))
-                                                       eshell-info-banner-partition-prefixes)))
-                                         (seq-into-sequence partitions))))
-      (mapcar (lambda (partition)
-                (let* ((mount-point (format "%s" (cdr (assoc 'mount_point partition))))
-                       (total       (cdr (assoc 'total partition)))
-                       (used        (cdr (assoc 'used  partition)))
-                       (percent     (/ (* 100 used) total)))
-                  (make-eshell-info-banner--mounted-partitions
-                   :path    (if (> (length mount-point) eshell-info-banner-shorten-path-from)
-                                (eshell-info-banner--abbr-path mount-point t)
-                              mount-point)
-                   :size    total
-                   :used    used
-                   :percent percent)))
-              partitions)))
+chosen.  Relies on the `duf' command."
+  (let* ((partitions (json-read-from-string (with-temp-buffer
+                                              (call-process "duf" nil t nil "-json")
+                                              (buffer-string))))
+         (partitions (cl-remove-if-not (lambda (partition)
+                                         (let ((device (format "%s" (cdr (assoc 'device partition)))))
+                                           (seq-some (lambda (prefix)
+                                                       (string-prefix-p prefix device t))
+                                                     eshell-info-banner-partition-prefixes)))
+                                       (seq-into-sequence partitions))))
+    (mapcar (lambda (partition)
+              (let* ((mount-point (format "%s" (cdr (assoc 'mount_point partition))))
+                     (total       (cdr (assoc 'total partition)))
+                     (used        (cdr (assoc 'used  partition)))
+                     (percent     (/ (* 100 used) total)))
+                (make-eshell-info-banner--mounted-partitions
+                 :path    (if (> (length mount-point) eshell-info-banner-shorten-path-from)
+                              (eshell-info-banner--abbr-path mount-point t)
+                            mount-point)
+                 :size    total
+                 :used    used
+                 :percent percent)))
+            partitions)))
 
 (defun eshell-info-banner--get-mounted-partitions-df (mount-position)
   "Get mounted partitions through df.
@@ -380,7 +381,7 @@ Common function between
 `eshell-info-banner--get-mounted-partitions-gnu' and
 `eshell-info-banner--get-mounted-partitions-darwin' which would
 otherwise differ solely on the position of the mount point in the
-partition list. Its position is given by the argument
+partition list.  Its position is given by the argument
 MOUNT-POSITION."
   (let ((partitions (cdr (split-string (eshell-info-banner--shell-command-to-string "df -l -k")
                                        (regexp-quote "\n")

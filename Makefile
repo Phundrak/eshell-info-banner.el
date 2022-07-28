@@ -1,11 +1,31 @@
-# -*- indent-tabs-mode: t -*-
-
 export EMACS ?= $(shell which emacs)
-CASK ?= $(shell which cask)
+EASK ?= $(shell which eask)
 
-all: compile
+all: install compile lint
+
+lint: checkdoc indent package regexps declare
+
+install:
+	${EASK} install-deps
+	${EASK} install
 
 compile:
-	${CASK} exec ${EMACS} -Q --script bin/compile-package.el 2>&1 | grep -A 2 -E "([Ee]rror|[Ww]arning):" && exit 1 || exit 0
+	${EASK} compile
+	${EASK} clean-elc
 
-.PHONY: all compile
+checkdoc:
+	${EASK} lint checkdoc
+
+declare:
+	${EASK} lint declare
+
+indent:
+	${EASK} lint indent
+
+package:
+	${EASK} lint package
+
+regexps:
+	${EASK} lint regexps
+
+.PHONY: all install compile ci
