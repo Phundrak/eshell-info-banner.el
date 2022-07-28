@@ -8,8 +8,8 @@ jobs:
   test:
     runs-on: ${{ matrix.os }}
     strategy:
+      fast-fail: false
       matrix:
-        fast-fail: false
         os:
           - ubuntu-latest
           - macos-latest
